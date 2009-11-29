@@ -1,2 +1,3 @@
 autom4te.cache
-src/.deps
+src/.deps/
+src/.libs/
