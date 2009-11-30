@@ -21,9 +21,68 @@
 #define _CORE_H
 
 #include <X11/Xlib.h>
+#include <limits.h>
+#include <assert.h>
 
-typedef struct _core {
+
+/* Needed to find out where the information came from. */
+#define inform(v, ...) inform_real(v, __FILE__, __LINE__, __VA_ARGS__)
+void inform_real(const unsigned int v, const char *file, unsigned int line, const char *fmt, ...);
+
+/* Maximum length of input-strings. */
+#define	KWMD_MAX_STRING 1024
+
+/* Simple way to insert a dummy-function */
+#define KWMD_DUMMY_RETURN(r) 						\
+	do { 								\
+		inform(VER_NOTIMPLEMENTED, "A function that's not yet "	\
+			"implemented was accessed at "); 		\
+		return (r); 						\
+	} while (0);
+
+/* Used for kwmd.state to indicate what state we are currently in.
+ * Verify state at any given generic function.
+ */
+#define STATE_UNINIT 		0x0 // Semi-dummy.
+#define STATE_CONFIGURED 	1<<0
+#define STATE_CONNECTED 	1<<1 // To X
+#define STATE_INITILIAZED	1<<2 // Basics are up
+#define STATE_EVENT		1<<3 // Event processing
+#define	STATE_TIMEOUT		1<<4 // No events - timed out
+#define STATE_RECONFIGURE	1<<5 // Reconfiguring
+#define STATE_MULTIHEAD		1<<6 // Running in multi-head mode. Not yet supported.
+#define STATE_ANY		(~0)
+
+#define ASSERT_STATE(s) assert((kwmd.state & s) == s)
+#define ASSERT_STATE_NOT(s) assert((kwmd.state & s) == 0)
+
+/* Defines the various levels of verbosity we may or may not want.
+ * The VER_X* masks are not necessarily limited to X. Only IGNORED or
+ * HANDLED is provided because we assert on anything else for now. HANDLED
+ * could be used for backing out too.
+ */
+#define VER_XIGNORED		1<<0 // Outside errors we (assumingly) safely ignored
+#define VER_XHANDLED		1<<1 // Outside errors we dealt with
+#define VER_CONFIG_CHANGES	1<<2
+#define VER_CONFIG		1<<3 // Parsing (ie: if a value is incorrect or adjusted)
+#define VER_STATE		1<<4
+#define VER_NOTIMPLEMENTED	1<<5 // When a dummy-function is accessed.
+
+/*******
+ * Core state structures
+ */
+	
+/* X-only state */
+typedef struct _x {
 	Display *dpy;
+} x;
+
+/* The core structure. Max length: 10ish entries.
+ */
+typedef struct _core {
+	unsigned int state;
+	unsigned int verbosity; // A bit of a mouthful, but only relevant in debug()
+	x x;
 } core;
 
-#endif
+#endif // _CORE_H
