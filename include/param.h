@@ -1,15 +1,33 @@
+/* wmd - parameter handling
+ * Copyright (C) 2009 Kristian Lyngstøl <kristian@bohemians.org>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
 
+#ifndef _PARAM_H
+#define _PARAM_H
+
+/* FIXME: Does not belong here! Duplicated from core.h for reasons of
+ * lazyness.
+ */
 #define	KWMD_MAX_STRING 1024
 
 /*******
  * Feature-related options.
  * XXX: WIP
  */
-typedef enum _featurelist {
-	FEAT_REPLACE = 0,
-	FEAT_SYNC,
-	FEAT_NUM
-} featurelist;
 
 typedef enum _featuretype {
 	FTYPE_BOOL = 0,
@@ -26,6 +44,7 @@ typedef enum _featuretype {
 typedef union _t_data {
 	void *v;
 	char *str;
+	char c;
 	int i;
 	unsigned int u;
 	int b;
@@ -33,25 +52,6 @@ typedef union _t_data {
 
 /* Test for various generic integer feature-functions.  */
 #define FTYPE_IS_INT(s) (s == FTYPE_INT || s == FTYPE_UINT || s == FTYPE_BOOL)
-
-
-extern int ftype_check_int(
-	const featuretype type,
-	const int min,
-	const int max,
-	const t_data data);
-
-extern int ftype_check_string(
-	const featuretype type,
-	const int min,
-	const int max,
-	const t_data data);
-
-extern int ftype_check_key(
-	const featuretype type,
-	const int min,
-	const int max,
-	const t_data data);
 
 typedef int (*verify_function)(
 	const featuretype type,
@@ -69,6 +69,7 @@ typedef struct _t_ftype {
 	int max;
 	verify_function verify;
 } t_ftype;
+
 typedef enum _t_feature_enum {
 	F_REPLACE = 0,
 	F_SYNC,
@@ -84,8 +85,8 @@ typedef struct _t_feature {
 } t_feature;
 
 extern t_feature feature[];
-extern t_ftype ftype[];
 
 int verify_all_features(void);
 int verify_feature(const t_feature *feature);
 
+#endif // _PARAM_H

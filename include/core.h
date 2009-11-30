@@ -24,10 +24,13 @@
 #include <limits.h>
 #include <assert.h>
 
-
 /* Needed to find out where the information came from. */
-#define inform(v, ...) inform_real(v, __FILE__, __LINE__, __VA_ARGS__)
-void inform_real(const unsigned int v, const char *file, unsigned int line, const char *fmt, ...);
+#define inform(v, ...) inform_real(v, __func__, __FILE__, __LINE__, __VA_ARGS__)
+void inform_real(const unsigned int v,
+		 const char *func,
+		 const char *file,
+		 unsigned int line,
+		 const char *fmt, ...);
 
 /* Maximum length of input-strings. */
 #define	KWMD_MAX_STRING 1024
@@ -51,7 +54,7 @@ void inform_real(const unsigned int v, const char *file, unsigned int line, cons
 #define	STATE_TIMEOUT		1<<4 // No events - timed out
 #define STATE_RECONFIGURE	1<<5 // Reconfiguring
 #define STATE_MULTIHEAD		1<<6 // Running in multi-head mode. Not yet supported.
-#define STATE_ANY		(~0)
+#define STATE_ANY		UINT_MAX
 
 #define ASSERT_STATE(s) assert((kwmd.state & s) == s)
 #define ASSERT_STATE_NOT(s) assert((kwmd.state & s) == 0)
@@ -60,6 +63,8 @@ void inform_real(const unsigned int v, const char *file, unsigned int line, cons
  * The VER_X* masks are not necessarily limited to X. Only IGNORED or
  * HANDLED is provided because we assert on anything else for now. HANDLED
  * could be used for backing out too.
+ *
+ * FIXME: Has to be possible to backtrace
  */
 #define VER_XIGNORED		1<<0 // Outside errors we (assumingly) safely ignored
 #define VER_XHANDLED		1<<1 // Outside errors we dealt with
@@ -67,8 +72,10 @@ void inform_real(const unsigned int v, const char *file, unsigned int line, cons
 #define VER_CONFIG		1<<3 // Parsing (ie: if a value is incorrect or adjusted)
 #define VER_STATE		1<<4
 #define VER_NOTIMPLEMENTED	1<<5 // When a dummy-function is accessed.
+#define VER_FILELINE		1<<6 // Inlcude __FILE__ and __LINE__ and verbosity
+#define VER_FUNCTION		1<<7 // Include __func__
 
-/*******
+/******************************
  * Core state structures
  */
 	
@@ -77,11 +84,9 @@ typedef struct _x {
 	Display *dpy;
 } x;
 
-/* The core structure. Max length: 10ish entries.
- */
+/* The core structure. Max length: 10ish entries.  */
 typedef struct _core {
 	unsigned int state;
-	unsigned int verbosity; // A bit of a mouthful, but only relevant in debug()
 	x x;
 } core;
 

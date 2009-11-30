@@ -30,14 +30,26 @@ core kwmd;
  * information should be available upon request.
  * FIXME: Dummy until I bother fixing it.
  */
-void inform_real(const unsigned int v, const char *file, unsigned int line, const char *fmt, ...)
+void inform_real(const unsigned int v,
+		 const char *func,
+		 const char *file,
+		 unsigned int line,
+		 const char *fmt, ...)
 {
 	va_list ap;
-	if (kwmd.state == STATE_UNINIT || kwmd.verbosity & v) {
-		printf("Debug[0x%X:%s:%u] ", v, file, line);
+
+	if (kwmd.state == STATE_UNINIT || feature[F_VERBOSITY].d.u & v) {
+
+		if (feature[F_VERBOSITY].d.u & VER_FILELINE)
+			printf("0x%X:%s:%u: ", v, file, line);
+
+		if (feature[F_VERBOSITY].d.u & VER_FUNCTION)
+			printf("%s(): ", func);
+
 		va_start(ap, fmt);
 		vfprintf(stdout, fmt, ap);
 		va_end(ap);
+
 		printf("\n");
 	}
 }

@@ -1,4 +1,3 @@
-
 /* wmd - parameter handling
  * Copyright (C) 2009 Kristian Lyngstøl <kristian@bohemians.org>
  * 
@@ -17,11 +16,64 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* Basic parameter support for wmd.
+ *
+ * WMD allows setting and reading parameters from various sources (in
+ * theory) and therefor needs a reasonably generic and flexible interface
+ * to make sure the values are sane.
+ *
+ * Verify, verify, verify and then make sure that you can't access these
+ * values without verifying them some more. But make it easy.
+ *
+ * We want as few entry-points the parameters as possible to assure a
+ * consistent behavior.
+ *
+ * XXX: We may want to split the actual values into it's own file to avoid
+ * 	mixing the values of the parameters and the framework to use it.
+ *
+ * XXX: A param-test framework should be included to dry-run param-changes.
+ * 	This is particularly important for bindings.
+ */
+
+#include <sys/param.h>
+
 #include "param.h"
 #include "core.h"
 
+/* These are static because you do not want to call the verification
+ * features from outside param, instead just call the feature-verification
+ * functions which in turn will figure out the correct function to call.
+ */
+static int ftype_check_int(const featuretype type,
+			   const int min,
+			   const int max,
+			   const t_data data);
 
-t_ftype ftype[FTYPE_NUM] = {
+static int ftype_check_string(const featuretype type,
+			      const int min,
+			      const int max,
+			      const t_data data);
+
+static int ftype_check_key(const featuretype type,
+			   const int min,
+			   const int max,
+			   const t_data data);
+
+/* Different feature-types we support. Not all min/max values are actually
+ * used, as that depends on the specific check function.
+ *
+ * XXX: Should other functions be allowed to fetch this? Perhaps through
+ * 	a get-function? The idea is to make is as little tempting as
+ * 	possible to circumvent proper param tests.
+ *
+ * From param.h:
+ *
+ * char *desc,
+ * int min,
+ * int max,
+ * *verify
+ */
+static t_ftype ftype[FTYPE_NUM] = {
 	{
 		"Boolean",
 		0,
@@ -53,6 +105,11 @@ t_ftype ftype[FTYPE_NUM] = {
 		ftype_check_key,
 	}
 };
+
+/* Actual settings, keep this in sync with param.h featurelist.
+ *
+ * XXX: To avoid sorting-issues, we probably want to do this a bit smarter.
+ */
 t_feature feature[F_NUM] =
 {
 	// F_REPLACE
@@ -65,30 +122,33 @@ t_feature feature[F_NUM] =
 	// F_SYNC
 	{
 		"sync"
-		"Run in synchronized X-mode. Easier debugging but slower, since we have to wait for X.",
+		"Run in synchronized X-mode. Easier debugging but "
+		"slower, since we have to wait for X.",
 		FTYPE_BOOL,
 		0,
 	},
 	// F_VERBOSITY
+	// XXX: When you have the function, file/line is generally just
+	//	noisy.
 	{
 		"verbosity",
 		"The verbosity bitmask.",
 		FTYPE_UINT,
-		(void *)(~0),
+		(void *)(UINT_MAX ^ VER_FILELINE),
 	},
 };
 
-/* Verifies that *data contains an int of some sort and that it's within
- * the given range. Note that *data is _not_ assumed to be an actual
- * pointer, as this is a generic prototype.
+/* Verifies that data contains an int of some sort and that it's within
+ * the given range.
  *
- * XXX: Turns out that uint and int isn't the same ;)
+ * XXX: Turns out that uint and int isn't the same. Perhaps using a larger
+ * 	int to store the unsigned to get it within the same bounds... A bit
+ * 	pointless just to avoid a tiny bit of code duplication.
  */
-int ftype_check_int(
-	const featuretype type, 
-	const int min,
-	const int max,
-	const t_data data)
+static int ftype_check_int(const featuretype type,
+			   const int min,
+			   const int max,
+			   const t_data data)
 {
 	unsigned int uint;
 
@@ -114,13 +174,14 @@ int ftype_check_int(
  * that there is no way (?) to verify that *data is valid before accessing
  * it, so if it points to a bogus area, we will still fall apart.
  *
+ * min is ignored.
+ *
  * Returns 0 for invalid string or the length of the string.
  */
-int ftype_check_string(
-	const featuretype type,
-	const int min,
-	const int max,
-	const t_data data)
+static int ftype_check_string(const featuretype type,
+			      const int min,
+			      const int max,
+			      const t_data data)
 {
 	int i;
 
@@ -130,7 +191,7 @@ int ftype_check_string(
 		return 0;
 	}
 	
-	for(i == 0; i < max; i++) {
+	for(i == 0; i < MAX(max, KWMD_MAX_STRING); i++) {
 		if (data.str[i] == '\0')
 			return i;
 	}
@@ -138,18 +199,19 @@ int ftype_check_string(
 	return 0;
 }
 
-/* Dummy-function until keys are implemented.
- */
-int ftype_check_key(
-	const featuretype type,
-	const int min,
-	const int max,
-	const t_data data)
+/* Dummy-function until keys/actions are implemented */
+static int ftype_check_key(const featuretype type,
+			   const int min,
+			   const int max,
+			   const t_data data)
 {
 	KWMD_DUMMY_RETURN(0);
 }
 
-/* Sanity check and verify a feature
+/* Sanity check and verify a feature and it's value based on the
+ * verification function.
+ *
+ * Returns true/false based on success.
  */
 int verify_feature(const t_feature *feature)
 {
@@ -178,7 +240,8 @@ int verify_feature(const t_feature *feature)
 	if (type->verify(feature->type, type->min, type->max, feature->d)) {
 		return 0;
 	} else {
-		inform(VER_CONFIG, "Featureverification failed for %s of type %s",
+		inform(VER_CONFIG, "Feature-verification failed for "
+			"%s of type %s",
 			feature->name,
 			type->desc);
 		return 1;
