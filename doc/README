@@ -1,0 +1,253 @@
+Random first-draft of wild ideas for a wonderful new WM
+
+Awesome:
+	- Layouts
+	- Multihead
+	- Reloading
+
+	NOT:
+	 - LUA (user shouldn't need to make their own wm)
+	 - Dependency hell
+	 - Glitchy
+
+WMII:
+	- Hackability of config
+	- TAGS
+	- Plan9 ?
+	- Cleanliness
+	- Keybindings
+
+	Missing: multihead and layouts. Seems a bit simple.
+
+Compiz:
+	- (semi) independent plugins?
+	- Config-engine (but perhaps only use/support one)
+	- Feature separation to some degree
+	- Composite?
+
+wmd:
+(Window Management Daemon)
+	- Hackable
+	- Clean
+	- Layouts
+	- Consistent defaults.
+	- Absolute minimal set of keyboard layouts
+
+	A clear stated goal and priority list that should not be changed
+	more frequently than every second major release.
+
+	Goal: An intuitive and terminal-friendly window manager that
+	doesn't get in your way and works the way you to expect it to work.
+
+	Priority:
+	 - Intuitive in every area
+	   - Usage
+	   - Configuration
+	   - Upgrading
+	   - Development
+	   - Project management
+	   - Releases
+	 - Documentation
+	   - Precise, concise and consistent.
+	   - Document for efficiency and clarity - in that order.
+	   - Do not distinguish between developer documentation and
+	     end-user documentation.
+	 - Never break
+	   - Any pure window management bug should be fixed immediately
+	     and included in a release, regardless of scope.
+	 - Learn from the mistakes of the past.
+	 - Avoid compromises.
+	 - Clean and lean over feature rich.
+	 - Be a good free software and OS citizen.
+	   - Follow standards
+	   - Keep dependencies to a minimum
+	   - Freedom
+	   - Follow established best practices where they do not conflict
+	     with higher priorities.
+	 - Measure success based on popularity, not feedback.
+
+Releases:
+	x.y.z-n
+
+	X: Configuration incompatibilities and major refactoring
+	Y: Minor refactoring and configuration additions.
+	Z: Features and feature-bug fixes.
+	N: Bug fixes.
+
+	After 0.5, 3 z-releases will be bug-maintained IE: when 0.5.9 is
+	released, 0.5.9, 0.5.8 and 0.5.7 will all have n-releases if
+	window management bugs are discovered.
+
+	After 2.0 is released, the last version of every X-release will
+	have bug-releases on both Z and N-level (ie: feature bugs and
+	window management bugs). No Y-releases will be accepted for old
+	X-releases.
+
+	Packagers may call the packages whatever they want, kwmd will not
+	adjust version numbers to work around packaging issues. The
+	development tip should be named "X.Y-devel", where X.Y is the last
+	released version, regardless of what the version of the next
+	release will be. We begin with 0.0-devel, and the first release
+	will be 0.1.0.0.
+
+	-n will be omitted for the first x.y.z release, and have a value of
+	'-1' for the first bug fix release.
+
+	X: Major,
+	Y: Minor,
+	Z: Patch,
+	-n: errata
+
+	When a branch for a major version is created, no minor-releases for
+	the previous version will be accepted. When a branch for a new
+	minor version is made, no patch-releases will be accepted. In
+	addition to the "last 3 z-releases", errata releases will be made
+	for any version that is included in a supported release of an
+	operating system if requested by the packager. This is to keep the
+	number of patches kept by distributions at a bare minimum and
+	remove the need for keeping separate lists of confirmed bugs.
+	
+Infrastructure
+	Do not repeat the mistakes of the past.
+	
+	Documentation should be kept in the source tree - that's where
+	developers work. Documentation should never be duplicated but
+	should be easily available. Documentation is never automatically
+	generated though converting automatically from one format to an
+	other (text in the source tree to html on web) is good.
+
+	The entire software stack in the infrastructure must be free and
+	reasonably easy to migrate.
+
+	Only one system to serve the same need should be available at any
+	given time. If testing is to take place, the testing ground must be
+	clearly marked and kept in constant sync with the production
+	system.
+
+	The infrastructure is as important as the rest of the project, but
+	should not be overdone. The official project should provide:
+	 - A version control system, readable for all. Including web-based
+	   access (view-only).
+	 - A web page
+	 - An issue tracker
+	These components do not have to be tightly integrated, but all the
+	services should be clearly visible.
+
+	The infrastructure should follow the same basic philosophy as the
+	main project. It should remain predictable, intuitive and stable
+	over a long period of time.
+
+Licensing and copyright
+	All contributions must be compatible with GNU GPL version 2.
+	
+	The project will be released as GNU GPL version 2 until an equally
+	readable license is available to take it's place.
+
+	Copyright should be clearly stated. Whoever wrote the code will
+	retain the copyright. If code is borrowed, the original source,
+	copyright and license must be clearly stated.
+
+	If you make significant contributions to any part of the project,
+	make sure you retain copyright for the work and is added to the
+	CONTRIBUTORS list.
+
+	Full name is required for all contributors.
+
+Co-operation
+	Any decision that affects the appearance of the project (web
+	design, name, etc) should be decided by the most active
+	contributors.
+
+	Respect your fellow contributors, even if they just joined the
+	project. Senior and junior contributors deserve the same level of
+	respect and consideration. On the other hand, some decisions affect
+	the most active contributors more than the less active, and in such
+	cases, their needs should be placed first.
+
+	In the end, reaching agreements is the key. Even when you disagree.
+
+	All discussions should be kept in the public. E-mail should always
+	be assumed to be public and copied to relevant mail lists. The
+	project language is English, there is no exception to this. Even if
+	you are alone in a chat-room, speak English. We can not have open
+	communication if everyone doesn't speak the same language.
+
+	All documentation should be in English. Internationalization is not
+	a priority, and will only be accepted if:
+	 A: It does not hinder any other goal or priority of the project on
+ 	    any level.
+	 B: The quality of work can be and is proof-read by a trusted
+	    contributor.
+	 C: There is a real need.
+	 D: The work is complete.
+	The last point is difficult to fulfill since we do not distinguish
+	between user- and developer-documentation, but is essential for
+	that very same reason. Any translation that is not reasonably up to
+	date will be excluded from releases, regardless of how small the
+	change is. The only exception is errata releases.
+
+	Translations will be removed if they are not included in 5 of the
+	last 10 releases.
+
+Code style
+	K&R, Linux-style.
+
+	Read the doc for Linux if in doubt.
+
+	Variable- and function-names should be easy to keep track of,
+	regardless of scope.
+
+	Modularize your code. Keep well-defined interaction points. Code
+	for readability and maintainability, not how fast you can type it
+	or prototype it.
+
+	Sanitize input proportional to how exposed the code is: a static
+	function you only intend and envision will be used from one or two
+	points might not require much (if any) input sanitizing, but the
+	moment the same function is no longer static, it must check basic
+	input. If it's from a user, it must check that the value of the
+	input is valid.
+
+Initial release schedule
+
+	0.0->0.5: Closed development, unless project proves itself beyond
+	any doubt. (This essentially makes them milestones instead of
+	actual releases)
+
+	0.1: PoC framework. Switch focus. Execute.
+	0.2: Tiling layout engine.
+	0.3: Floating windows.
+	0.4: Window context backend - tag engine.
+	0.5: "Maintanance" release. (Documentation and cleanup release)
+	0.6: Configuration PoC.
+	0.7: Refactor keybinding backend.
+	0.8: "Maintenance" release.
+	0.9: Stacked and max layout.
+	0.10: Configuration defaults rework.
+	0.11: "Maintenance" release.
+	0.12: Decoration refactoring.
+	0.13: "Maintenance" release.
+	0.14: Information-exposure tests ("menu"/"status"-bar? External?)
+	0.15: "Maintenance" release.
+	0.16: Configuration sanitization and minimzation (prep for a stable
+	      configuration scheme)
+	0.17: "Maintenance" release.
+	0.18: ?
+	1.0: Feature-test release.
+	2.0: Multihead.
+
+	The 0.x-series is used to evolve the basic functionality needed and
+	"Set the tone". 1.x will be used to find the right way to go
+	forward, and see if we can discard some broken ideas. Rudimentary
+	multihead should evolve during 1.x, and be sane in 2.0.
+
+	The schedule is subject to change at any given time. There will not
+	be errata-releases for 0.x, while patch-releases are likely.
+
+	Build system is autoconf/automake and family until a real need for
+	something else arise. A switch of build system will require a new
+	major version after 1.0. Similar goes for how fond fond we are of XCB.
+
+	During development, the version in the tree will be the
+	to-be-released version, possibly with a -pre.
+
