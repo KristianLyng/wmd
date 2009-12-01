@@ -42,44 +42,37 @@
 #include "com.h"
 #include "core.h"
 
-/* Actual settings, keep this in sync with param.h paramlist.
+/* Param Definition (...).
+ * Ensures it's mapped to the enum regardless of sorting.
+ */
+#define PD(name,type,def,desc) 			\
+	[P_ ## name] =				\
+	{ #name, desc, PTYPE_ ## type,		\
+	def, def },
+
+/* Actual settings matching the param enum in param.h
  *
- * XXX: To avoid sorting-issues, we probably want to do this a bit smarter.
  * XXX: Probably also want to move this somewhere I suppose, it's
  * 	reasonably important, after all.
  */
 t_param param[P_NUM] =
 {
-	// F_REPLACE
-	{
-		"replace",
+	PD(REPLACE,	BOOL,	0,
 		"If set to true, wmd will attempt to replace the running \n"
 		"window manager, otherwise, it will exit if a window \n"
-		"manager already has control over the X session.",
-		PTYPE_BOOL,
-		0,
-		0,
-	},
-	// F_SYNC
-	{
-		"sync"
+		"manager already has control over the X session.")
+
+	PD(SYNC,	BOOL,	0,
 		"Run in synchronized X-mode. Easier debugging but \n"
-		"slower, since we have to wait for X.",
-		PTYPE_BOOL,
-		0,
-		0,
-	},
-	// F_VERBOSITY
-	// XXX: When you have the function, file/line is generally just
-	//	noisy.
-	{
-		"verbosity",
-		"The verbosity bitmask.",
-		PTYPE_UINT,
-		(t_data)(UINT_MAX ^ (1<<VER_FILELINE)),
-		(t_data)(UINT_MAX ^ (1<<VER_FILELINE)),
-	},
+		"slower, since we have to wait for X.")
+
+	PD(VERBOSITY, 	UINT,	(t_data)(UINT_MAX ^ (1<<VER_FILELINE)),
+		"The verbosity is a bitmask to filter out what sort of \n"
+		"information is sent, and how detailed it is. See \n"
+		"FIXME:arglist for a list of bits and what they do.")
 };
+
+#undef PD
 
 /* These are static because you do not want to call the verification
  * params from outside param, instead just call the param-verification
