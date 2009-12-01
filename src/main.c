@@ -46,7 +46,7 @@ static void set_defaults(void)
 {
 	ASSERT_STATE_NOT(STATE_ANY);
 	wmd.x.dpy = NULL;
-	assert(verify_all_params());
+	assert(param_verify(-1));
 }
 
 /* Connect to the X display, check if it worked and update state. 
@@ -59,7 +59,7 @@ static void x_connect(void)
 	wmd.x.dpy = XOpenDisplay(NULL);
 	assert(wmd.x.dpy);
 
-	if (param[P_SYNC].d.b)
+	if (P(SYNC).b)
 		XSynchronize(wmd.x.dpy, 1);
 	else
 		XSynchronize(wmd.x.dpy, 0);

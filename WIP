@@ -1,9 +1,7 @@
 Work-in-progress file (Almost the same as "TODO" except it's actually being
 done):
 
-- Rename to wmd (or something else?)
-- Fix features->param name change
-- Smooth the param.{c,h} transition out
+- Better param handling
 - Figure out how to handle things like MAX_STRING
 - ..... everything else.
 - MAKE THE WORLD A BETTER PLACE

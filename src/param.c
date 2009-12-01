@@ -45,6 +45,8 @@
 /* Actual settings, keep this in sync with param.h paramlist.
  *
  * XXX: To avoid sorting-issues, we probably want to do this a bit smarter.
+ * XXX: Probably also want to move this somewhere I suppose, it's
+ * 	reasonably important, after all.
  */
 t_param param[P_NUM] =
 {
@@ -163,13 +165,13 @@ static int ptype_check_int(const paramtype type,
 
 	if (type == PTYPE_UINT) {
 		if (data.u < min || data.u > max) {
-			inform(VER_CONFIG, "Value of integer outside of range. "
+			inform(V(CONFIG), "Value of integer outside of range. "
 					"(%d < %d < %d)", min, data.i, max);
 			return 0;
 		}
 	} else {
 		if (data.i < min || data.i > max) {
-			inform(VER_CONFIG, "Value of integer outside of range. "
+			inform(V(CONFIG), "Value of integer outside of range. "
 					"(%d < %d < %d)", min, data.i, max);
 			return 0;
 		}
@@ -194,7 +196,7 @@ static int ptype_check_string(const paramtype type,
 
 	assert(type == PTYPE_STRING);
 	if (data.str == NULL) {
-		inform(VER_CONFIG,"NULL-pointer when verifying a string");
+		inform(V(CONFIG),"NULL-pointer when verifying a string");
 		return 0;
 	}
 	
@@ -202,7 +204,7 @@ static int ptype_check_string(const paramtype type,
 		if (data.str[i] == '\0')
 			return i;
 	}
-	inform(VER_CONFIG,"String is larger than expected");
+	inform(V(CONFIG),"String is larger than expected");
 	return 0;
 }
 
@@ -215,59 +217,56 @@ static int ptype_check_key(const paramtype type,
 	WMD_DUMMY_RETURN(0);
 }
 
+/* Just checks the range of p. Since this should never fail, asserts will
+ * do.
+ */
+static void param_is_in_range(int p) {
+	assert(p >= 0);
+	assert(p < P_NUM);
+}
+
 /* Sanity check and verify a param and it's value based on the
  * verification function.
  *
  * Returns true/false based on success.
  */
-int verify_param(const t_param *param)
+int param_verify(int p)
 {
 	t_ptype *type = NULL;
-	if (param == NULL) {
-		inform(VER_CONFIG, "Feature verification attempted on "
-			"a NULL-param.");
-		return 0;
+	int i = 0;
+	int ret = 0;
+	if(p == -1) {
+		for(i = 0; i < P_NUM; i++)
+			ret += param_verify(i);
+		return ret;
 	}
-	
-	if (param->type < 0 || param->type >= PTYPE_NUM) {
-		inform(VER_CONFIG, "Feature verification attempted on a "
-			"param with an invalid paramtype.");
-		return 0;
-	}
+	param_is_in_range(p);
 
 	/* This should be impossible, as ptype[] is rather static.
 	 * If this ever happens, we are in big trouble and should quit
 	 * before it's too late.
 	 */
-	assert(&ptype[param->type] != NULL);
-	assert(ptype[param->type].verify);
+	assert(&ptype[param[p].type] != NULL);
+	assert(ptype[param[p].type].verify);
 
-	type = &ptype[param->type];
+	type = &ptype[param[p].type];
 
-	if (type->verify(param->type, type->min, type->max, param->d)) {
-		return 0;
-	} else {
-		inform(VER_CONFIG, "Feature-verification failed for "
-			"%s of type %s",
-			param->name,
-			type->desc);
+	if (type->verify(param[p].type, type->min, type->max, param[p].d)) {
 		return 1;
+	} else {
+		inform(V(CONFIG), "Parameter-verification failed for "
+			"%s of type %s",
+			param[p].name,
+			type->desc);
+		return 0;
 	}
 }
 
-
-/* Walks through the param[] data structure to verify its contents.
- * Returns true upon success.
- */
-int verify_all_params(void)
-{
-	int i;
-	int failed = 0;
-
-	/* A bit ugly? Or lubly? Let's have a vote! -K
-	 */
-	for(i = 0; i < P_NUM; i++)
-		failed += !verify_param(&param[i]);
-	
-	return failed;
+t_data param_get_data(t_param_enum p) {
+	param_is_in_range(p);
+	if (param[p].d.v == NULL)
+		inform(V(CONFIG), "Fetching a null-parameter(%s).",
+			param[p].name);
+	return param[p].d;
 }
+

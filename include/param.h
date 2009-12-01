@@ -60,9 +60,14 @@ typedef struct _t_param {
 	const t_data default_d;
 } t_param;
 
-extern t_param param[];
+/* Verify a parameter with the p-enum. If p is -1, all parameters are
+ * verified.
+ */
+int param_verify(int p);
 
-int verify_all_params(void);
-int verify_param(const t_param *param);
-t_data param_get(t_param_enum param);
+/* Fetch the data of a parameter defined by p.  */
+t_data param_get_data(t_param_enum p);
+
+#define P(i) param_get_data(P_ ## i)
+
 #endif // _PARAM_H

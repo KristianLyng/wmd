@@ -1,6 +1,6 @@
 
 AC_COPYRIGHT([Copyright (c) 2009 Kristian Lyngstol])
-AC_INIT([wmd], [0.0.0],[foo],[wmd])
+AC_INIT([wmd], [0.1-devel],,[wmd])
 AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 AC_PROG_LIBTOOL
