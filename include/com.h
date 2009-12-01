@@ -1,0 +1,61 @@
+/* wmd communication headers
+ * Copyright (C) 2009 Kristian Lyngstøl <kristian@bohemians.org>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#ifndef _COM_H
+#define _COM_H
+
+#include <stdio.h>
+
+/* Send information. v is the verbosity level as described below. */
+#define inform(v, ...) inform_real(v, __func__, __FILE__, __LINE__, __VA_ARGS__)
+void inform_real(const unsigned int v,
+		 const char *func,
+		 const char *file,
+		 const unsigned int line,
+		 const char *fmt, ...);
+
+/* The types of verbosity available. The description is kept in com.c. This
+ * should be reasonably opaque to the callers. Keep in mind that order
+ * matters (verified by asserts).
+ */
+typedef enum _t_verbosity_enum {
+	VER_XIGNORED = 0,
+	VER_XHANDLED,
+	VER_CONFIG_CHANGES,
+	VER_CONFIG,
+	VER_STATE,
+	VER_NOTIMPLEMENTED,
+	VER_FILELINE,
+	VER_FUNCTION,
+	VER_CORE,
+	VER_NUM
+} t_verbosity_enum;
+
+/* Verify that inform() is ready and sanity-check the verbosity levels. */
+void inform_init(void);
+
+/* Describe the p-verbosity level in human readable format on fd. If p is
+ * -1, all verbosity levels are described.
+ */
+void inform_describe_verbosity(FILE *fd, const int p);
+
+/* Passed to inform(): inform(V(XHANDLED),"foo") for instance. */
+#define V(s) (1<<VER_ ## s)
+
+
+#endif // COM_H

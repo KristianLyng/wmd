@@ -1,4 +1,3 @@
-
 /* wmd core data structures
  * Copyright (C) 2009 Kristian Lyngstøl <kristian@bohemians.org>
  * 
@@ -22,15 +21,8 @@
 
 #include <X11/Xlib.h>
 #include <limits.h>
+#include <stdio.h>
 #include <assert.h>
-
-/* Needed to find out where the information came from. */
-#define inform(v, ...) inform_real(v, __func__, __FILE__, __LINE__, __VA_ARGS__)
-void inform_real(const unsigned int v,
-		 const char *func,
-		 const char *file,
-		 unsigned int line,
-		 const char *fmt, ...);
 
 /* Maximum length of input-strings. */
 #define	WMD_MAX_STRING 1024
@@ -58,35 +50,6 @@ void inform_real(const unsigned int v,
 
 #define ASSERT_STATE(s) assert((wmd.state & s) == s)
 #define ASSERT_STATE_NOT(s) assert((wmd.state & s) == 0)
-
-typedef enum _t_verbosity_enum {
-	VER_XIGNORED = 0,
-	VER_XHANDLED,
-	VER_CONFIG_CHANGES,
-	VER_CONFIG,
-	VER_STATE,
-	VER_NOTIMPLEMENTED,
-	VER_FILELINE,
-	VER_FUNCTION,
-	VER_NUM
-} t_verbosity_enum;
-/* Defines the various levels of verbosity we may or may not want.
- * The VER_X* masks are not necessarily limited to X. Only IGNORED or
- * HANDLED is provided because we assert on anything else for now. HANDLED
- * could be used for backing out too.
- *
- * FIXME: Has to be possible to backtrace
- */
-typedef struct _t_verbosity {
-	unsigned int position; // From t_verbosity_enum for backtracing
-	unsigned int bit;
-	const char *name;
-	const char *description;
-} t_verbosity;
-
-extern t_verbosity verbosity[];
-
-#define V(s) verbosity[VER_ ## s].bit
 /******************************
  * Core state structures
  */
@@ -101,5 +64,7 @@ typedef struct _core {
 	unsigned int state;
 	x x;
 } core;
+
+extern core wmd;
 
 #endif // _CORE_H

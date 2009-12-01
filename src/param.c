@@ -39,6 +39,7 @@
 
 #include "param.h"
 #include "param-private.h"
+#include "com.h"
 #include "core.h"
 
 /* Actual settings, keep this in sync with param.h paramlist.

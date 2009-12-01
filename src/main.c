@@ -16,71 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
 #include <stdarg.h>
-
 #include "param.h"
+#include "com.h"
 #include "core.h"
 
 core wmd;
-
-#define ADD_VER(name,desc) \
-	{ VER_ ## name, 1<<VER_ ## name, #name, desc }
-	
-t_verbosity verbosity[VER_NUM] = {
-	ADD_VER(XIGNORED,
-		"Ignored X errors/warnings"),
-	ADD_VER(XHANDLED,
-		"X errors that have been dealt with"),
-	ADD_VER(CONFIG_CHANGES,
-		"Changes to the configuration"),
-	ADD_VER(CONFIG,
-		"Configuration parsing/verification"),
-	ADD_VER(STATE,
-		"Changes in state, ie: connect/disconnect \n"
-		"from X, event-handling/state-handling."),
-	ADD_VER(NOTIMPLEMENTED,
-		"Attempted access to features that only \n"
-		"have placeholders."),
-	ADD_VER(FILELINE,
-		"Include source-file and line number in \n"
-		"messages."),
-	ADD_VER(FUNCTION,
-		"Include the function that sent the message \n"
-		"in the output."),
-};
-
-/* Communicate the information and possibly where it came from
- * (funct/file/line) if the verbosity dictates it.
- *
- * Note that we do not distinguish between user and developer. All
- * information should be available upon request.
- *
- * FIXME: Doesn't belong here, and should eventually be expanded a bit.
- */
-void inform_real(const unsigned int v,
-		 const char *func,
-		 const char *file,
-		 unsigned int line,
-		 const char *fmt, ...)
-{
-	va_list ap;
-
-	if (wmd.state == STATE_UNINIT || param[P_VERBOSITY].d.u & v) {
-
-		if (param[P_VERBOSITY].d.u & V(FILELINE))
-			printf("0x%X:%s:%u: ", v, file, line);
-
-		if (param[P_VERBOSITY].d.u & V(FUNCTION))
-			printf("%s(): ", func);
-
-		va_start(ap, fmt);
-		vfprintf(stdout, fmt, ap);
-		va_end(ap);
-
-		printf("\n");
-	}
-}
 
 /* Safe setting of state */
 void set_state(const unsigned int state)
@@ -108,25 +49,40 @@ static void set_defaults(void)
 	assert(verify_all_params());
 }
 
-/* Connect to the X display, check if it worked and update state.  */
-static void k_connect(void)
+/* Connect to the X display, check if it worked and update state. 
+ *
+ * XXX: Should verify XSynchronize
+ */
+static void x_connect(void)
 {
+	assert(wmd.x.dpy == NULL);
 	wmd.x.dpy = XOpenDisplay(NULL);
 	assert(wmd.x.dpy);
+
 	if (param[P_SYNC].d.b)
 		XSynchronize(wmd.x.dpy, 1);
-	else 
+	else
 		XSynchronize(wmd.x.dpy, 0);
 
 	set_state(STATE_CONNECTED);
+}
+
+/* Temporary feature-testing function for stuff that isn't available
+ * elsewhere yet.
+ */
+static void xxx_poc(void)
+{
+	inform_describe_verbosity(stdout,-1);
 }
 
 /* Let's keep it simple; ten-ish lines max. */
 int main(int argc, char **argv)
 {
 	wmd.state = 0;
+	inform_init();
 	set_defaults();
-	k_connect();
+	x_connect();
+	xxx_poc();
 	inform(V(STATE), "Everything is done");
 	return 0;
 }
