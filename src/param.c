@@ -38,28 +38,66 @@
 #include <sys/param.h>
 
 #include "param.h"
+#include "param-private.h"
 #include "core.h"
 
+/* Actual settings, keep this in sync with param.h paramlist.
+ *
+ * XXX: To avoid sorting-issues, we probably want to do this a bit smarter.
+ */
+t_param param[P_NUM] =
+{
+	// F_REPLACE
+	{
+		"replace",
+		"If set to true, wmd will attempt to replace the running \n"
+		"window manager, otherwise, it will exit if a window \n"
+		"manager already has control over the X session.",
+		PTYPE_BOOL,
+		0,
+		0,
+	},
+	// F_SYNC
+	{
+		"sync"
+		"Run in synchronized X-mode. Easier debugging but \n"
+		"slower, since we have to wait for X.",
+		PTYPE_BOOL,
+		0,
+		0,
+	},
+	// F_VERBOSITY
+	// XXX: When you have the function, file/line is generally just
+	//	noisy.
+	{
+		"verbosity",
+		"The verbosity bitmask.",
+		PTYPE_UINT,
+		(t_data)(UINT_MAX ^ (1<<VER_FILELINE)),
+		(t_data)(UINT_MAX ^ (1<<VER_FILELINE)),
+	},
+};
+
 /* These are static because you do not want to call the verification
- * features from outside param, instead just call the feature-verification
+ * params from outside param, instead just call the param-verification
  * functions which in turn will figure out the correct function to call.
  */
-static int ftype_check_int(const featuretype type,
+static int ptype_check_int(const paramtype type,
 			   const int min,
 			   const int max,
 			   const t_data data);
 
-static int ftype_check_string(const featuretype type,
+static int ptype_check_string(const paramtype type,
 			      const int min,
 			      const int max,
 			      const t_data data);
 
-static int ftype_check_key(const featuretype type,
+static int ptype_check_key(const paramtype type,
 			   const int min,
 			   const int max,
 			   const t_data data);
 
-/* Different feature-types we support. Not all min/max values are actually
+/* Different param-types we support. Not all min/max values are actually
  * used, as that depends on the specific check function.
  *
  * XXX: Should other functions be allowed to fetch this? Perhaps through
@@ -73,69 +111,37 @@ static int ftype_check_key(const featuretype type,
  * int max,
  * *verify
  */
-static t_ftype ftype[FTYPE_NUM] = {
+static t_ptype ptype[PTYPE_NUM] = {
 	{
 		"Boolean",
 		0,
 		1,
-		ftype_check_int,
+		ptype_check_int,
 	},
 	{
 		"Unsigned integer",
 		0,
 		UINT_MAX,
-		ftype_check_int,
+		ptype_check_int,
 	},
 	{
 		"Signed integer",
 		INT_MIN,
 		INT_MAX,
-		ftype_check_int,
+		ptype_check_int,
 	},
 	{
 		"Character string",
 		0,
-		KWMD_MAX_STRING,
-		ftype_check_string,
+		WMD_MAX_STRING,
+		ptype_check_string,
 	},
 	{
 		"Key binding",
 		0,
 		0,
-		ftype_check_key,
+		ptype_check_key,
 	}
-};
-
-/* Actual settings, keep this in sync with param.h featurelist.
- *
- * XXX: To avoid sorting-issues, we probably want to do this a bit smarter.
- */
-t_feature feature[F_NUM] =
-{
-	// F_REPLACE
-	{
-		"replace",
-		"Try to replace the running WM if it supports it.",
-		FTYPE_BOOL,
-		0,
-	},
-	// F_SYNC
-	{
-		"sync"
-		"Run in synchronized X-mode. Easier debugging but "
-		"slower, since we have to wait for X.",
-		FTYPE_BOOL,
-		0,
-	},
-	// F_VERBOSITY
-	// XXX: When you have the function, file/line is generally just
-	//	noisy.
-	{
-		"verbosity",
-		"The verbosity bitmask.",
-		FTYPE_UINT,
-		(void *)(UINT_MAX ^ VER_FILELINE),
-	},
 };
 
 /* Verifies that data contains an int of some sort and that it's within
@@ -145,16 +151,16 @@ t_feature feature[F_NUM] =
  * 	int to store the unsigned to get it within the same bounds... A bit
  * 	pointless just to avoid a tiny bit of code duplication.
  */
-static int ftype_check_int(const featuretype type,
+static int ptype_check_int(const paramtype type,
 			   const int min,
 			   const int max,
 			   const t_data data)
 {
 	unsigned int uint;
 
-	assert(FTYPE_IS_INT(type));
+	assert(PTYPE_IS_INT(type));
 
-	if (type == FTYPE_UINT) {
+	if (type == PTYPE_UINT) {
 		if (data.u < min || data.u > max) {
 			inform(VER_CONFIG, "Value of integer outside of range. "
 					"(%d < %d < %d)", min, data.i, max);
@@ -178,20 +184,20 @@ static int ftype_check_int(const featuretype type,
  *
  * Returns 0 for invalid string or the length of the string.
  */
-static int ftype_check_string(const featuretype type,
+static int ptype_check_string(const paramtype type,
 			      const int min,
 			      const int max,
 			      const t_data data)
 {
 	int i;
 
-	assert(type == FTYPE_STRING);
+	assert(type == PTYPE_STRING);
 	if (data.str == NULL) {
 		inform(VER_CONFIG,"NULL-pointer when verifying a string");
 		return 0;
 	}
 	
-	for(i == 0; i < MAX(max, KWMD_MAX_STRING); i++) {
+	for(i == 0; i < MAX(max, WMD_MAX_STRING); i++) {
 		if (data.str[i] == '\0')
 			return i;
 	}
@@ -200,67 +206,67 @@ static int ftype_check_string(const featuretype type,
 }
 
 /* Dummy-function until keys/actions are implemented */
-static int ftype_check_key(const featuretype type,
+static int ptype_check_key(const paramtype type,
 			   const int min,
 			   const int max,
 			   const t_data data)
 {
-	KWMD_DUMMY_RETURN(0);
+	WMD_DUMMY_RETURN(0);
 }
 
-/* Sanity check and verify a feature and it's value based on the
+/* Sanity check and verify a param and it's value based on the
  * verification function.
  *
  * Returns true/false based on success.
  */
-int verify_feature(const t_feature *feature)
+int verify_param(const t_param *param)
 {
-	t_ftype *type = NULL;
-	if (feature == NULL) {
+	t_ptype *type = NULL;
+	if (param == NULL) {
 		inform(VER_CONFIG, "Feature verification attempted on "
-			"a NULL-feature.");
+			"a NULL-param.");
 		return 0;
 	}
 	
-	if (feature->type < 0 || feature->type >= FTYPE_NUM) {
+	if (param->type < 0 || param->type >= PTYPE_NUM) {
 		inform(VER_CONFIG, "Feature verification attempted on a "
-			"feature with an invalid featuretype.");
+			"param with an invalid paramtype.");
 		return 0;
 	}
 
-	/* This should be impossible, as ftype[] is rather static.
+	/* This should be impossible, as ptype[] is rather static.
 	 * If this ever happens, we are in big trouble and should quit
 	 * before it's too late.
 	 */
-	assert(&ftype[feature->type] != NULL);
-	assert(ftype[feature->type].verify);
+	assert(&ptype[param->type] != NULL);
+	assert(ptype[param->type].verify);
 
-	type = &ftype[feature->type];
+	type = &ptype[param->type];
 
-	if (type->verify(feature->type, type->min, type->max, feature->d)) {
+	if (type->verify(param->type, type->min, type->max, param->d)) {
 		return 0;
 	} else {
 		inform(VER_CONFIG, "Feature-verification failed for "
 			"%s of type %s",
-			feature->name,
+			param->name,
 			type->desc);
 		return 1;
 	}
 }
 
 
-/* Walks through the feature[] data structure to verify its contents.
+/* Walks through the param[] data structure to verify its contents.
  * Returns true upon success.
  */
-int verify_all_features(void)
+int verify_all_params(void)
 {
 	int i;
 	int failed = 0;
 
 	/* A bit ugly? Or lubly? Let's have a vote! -K
 	 */
-	for(i = 0; i < F_NUM; i++)
-		failed += !verify_feature(&feature[i]);
+	for(i = 0; i < P_NUM; i++)
+		failed += !verify_param(&param[i]);
 	
 	return failed;
 }

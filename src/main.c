@@ -1,4 +1,4 @@
-/* Kristian's Window Management Daemon
+/* Window Management Daemon
  * Copyright (C) 2009 Kristian Lyngstøl <kristian@bohemians.org>
  * 
  * This program is free software; you can redistribute it and/or modify
@@ -22,13 +22,41 @@
 #include "param.h"
 #include "core.h"
 
-core kwmd;
+core wmd;
 
-/* Handle program-messages.
+#define ADD_VER(name,desc) \
+	{ VER_ ## name, 1<<VER_ ## name, #name, desc }
+	
+t_verbosity verbosity[VER_NUM] = {
+	ADD_VER(XIGNORED,
+		"Ignored X errors/warnings"),
+	ADD_VER(XHANDLED,
+		"X errors that have been dealt with"),
+	ADD_VER(CONFIG_CHANGES,
+		"Changes to the configuration"),
+	ADD_VER(CONFIG,
+		"Configuration parsing/verification"),
+	ADD_VER(STATE,
+		"Changes in state, ie: connect/disconnect \n"
+		"from X, event-handling/state-handling."),
+	ADD_VER(NOTIMPLEMENTED,
+		"Attempted access to features that only \n"
+		"have placeholders."),
+	ADD_VER(FILELINE,
+		"Include source-file and line number in \n"
+		"messages."),
+	ADD_VER(FUNCTION,
+		"Include the function that sent the message \n"
+		"in the output."),
+};
+
+/* Communicate the information and possibly where it came from
+ * (funct/file/line) if the verbosity dictates it.
  *
  * Note that we do not distinguish between user and developer. All
  * information should be available upon request.
- * FIXME: Dummy until I bother fixing it.
+ *
+ * FIXME: Doesn't belong here, and should eventually be expanded a bit.
  */
 void inform_real(const unsigned int v,
 		 const char *func,
@@ -38,12 +66,12 @@ void inform_real(const unsigned int v,
 {
 	va_list ap;
 
-	if (kwmd.state == STATE_UNINIT || feature[F_VERBOSITY].d.u & v) {
+	if (wmd.state == STATE_UNINIT || param[P_VERBOSITY].d.u & v) {
 
-		if (feature[F_VERBOSITY].d.u & VER_FILELINE)
+		if (param[P_VERBOSITY].d.u & V(FILELINE))
 			printf("0x%X:%s:%u: ", v, file, line);
 
-		if (feature[F_VERBOSITY].d.u & VER_FUNCTION)
+		if (param[P_VERBOSITY].d.u & V(FUNCTION))
 			printf("%s(): ", func);
 
 		va_start(ap, fmt);
@@ -57,38 +85,38 @@ void inform_real(const unsigned int v,
 /* Safe setting of state */
 void set_state(const unsigned int state)
 {
-	kwmd.state |= state;
+	wmd.state |= state;
 	ASSERT_STATE(state);
-	inform(VER_STATE, "state set");
+	inform(V(STATE), "state set");
 }
 
 void unset_state(const unsigned int state)
 {
-	kwmd.state &= !state;
+	wmd.state &= !state;
 	ASSERT_STATE_NOT(state);
-	inform(VER_STATE, "state unset");
+	inform(V(STATE), "state unset");
 }
 
-/* Essentially a controlled reset of kwmd (the structure). 
+/* Essentially a controlled reset of wmd (the structure). 
  * Keep in mind that state should already be explicitly set
  * to avoid any confusion.
  */
 static void set_defaults(void)
 {
 	ASSERT_STATE_NOT(STATE_ANY);
-	kwmd.x.dpy = NULL;
-	assert(verify_all_features());
+	wmd.x.dpy = NULL;
+	assert(verify_all_params());
 }
 
 /* Connect to the X display, check if it worked and update state.  */
 static void k_connect(void)
 {
-	kwmd.x.dpy = XOpenDisplay(NULL);
-	assert(kwmd.x.dpy);
-	if (feature[F_SYNC].d.b)
-		XSynchronize(kwmd.x.dpy, 1);
+	wmd.x.dpy = XOpenDisplay(NULL);
+	assert(wmd.x.dpy);
+	if (param[P_SYNC].d.b)
+		XSynchronize(wmd.x.dpy, 1);
 	else 
-		XSynchronize(kwmd.x.dpy, 0);
+		XSynchronize(wmd.x.dpy, 0);
 
 	set_state(STATE_CONNECTED);
 }
@@ -96,9 +124,9 @@ static void k_connect(void)
 /* Let's keep it simple; ten-ish lines max. */
 int main(int argc, char **argv)
 {
-	kwmd.state = 0;
+	wmd.state = 0;
 	set_defaults();
 	k_connect();
-	inform(VER_STATE, "Everything is done");
+	inform(V(STATE), "Everything is done");
 	return 0;
 }

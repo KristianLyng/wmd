@@ -22,23 +22,18 @@
 /* FIXME: Does not belong here! Duplicated from core.h for reasons of
  * lazyness.
  */
-#define	KWMD_MAX_STRING 1024
+#define	WMD_MAX_STRING 1024
 
-/*******
- * Feature-related options.
- * XXX: WIP
- */
+typedef enum _paramtype {
+	PTYPE_BOOL = 0,
+	PTYPE_UINT,
+	PTYPE_INT,
+	PTYPE_STRING,
+	PTYPE_KEY,
+	PTYPE_NUM
+} paramtype;
 
-typedef enum _featuretype {
-	FTYPE_BOOL = 0,
-	FTYPE_UINT,
-	FTYPE_INT,
-	FTYPE_STRING,
-	FTYPE_KEY,
-	FTYPE_NUM
-} featuretype;
-
-/* Container for data types available for features, passed to various
+/* Container for data types available for params, passed to various
  * helper-functions.
  */
 typedef union _t_data {
@@ -50,43 +45,24 @@ typedef union _t_data {
 	int b;
 } t_data;
 
-/* Test for various generic integer feature-functions.  */
-#define FTYPE_IS_INT(s) (s == FTYPE_INT || s == FTYPE_UINT || s == FTYPE_BOOL)
+typedef enum _t_param_enum {
+	P_REPLACE = 0,
+	P_SYNC,
+	P_VERBOSITY,
+	P_NUM
+} t_param_enum;
 
-typedef int (*verify_function)(
-	const featuretype type,
-	const int min,
-	const int max,
-	const t_data data);
-
-/* Different feature-types. The min/max is passed to the verification
- * function to allow re-use of verification functions in case of int, uint
- * and bool.
- */
-typedef struct _t_ftype {
-	const char *desc;
-	int min;
-	int max;
-	verify_function verify;
-} t_ftype;
-
-typedef enum _t_feature_enum {
-	F_REPLACE = 0,
-	F_SYNC,
-	F_VERBOSITY,
-	F_NUM
-} t_feature_enum;
-
-typedef struct _t_feature {
+typedef struct _t_param {
 	const char *name;
 	const char *description;
-	featuretype type;
+	paramtype type;
 	t_data d; // data/value. Frequently used shorthand.
-} t_feature;
+	const t_data default_d;
+} t_param;
 
-extern t_feature feature[];
+extern t_param param[];
 
-int verify_all_features(void);
-int verify_feature(const t_feature *feature);
-
+int verify_all_params(void);
+int verify_param(const t_param *param);
+t_data param_get(t_param_enum param);
 #endif // _PARAM_H

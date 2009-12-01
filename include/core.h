@@ -1,5 +1,5 @@
 
-/* kwmd core data structures
+/* wmd core data structures
  * Copyright (C) 2009 Kristian Lyngstøl <kristian@bohemians.org>
  * 
  * This program is free software; you can redistribute it and/or modify
@@ -33,17 +33,17 @@ void inform_real(const unsigned int v,
 		 const char *fmt, ...);
 
 /* Maximum length of input-strings. */
-#define	KWMD_MAX_STRING 1024
+#define	WMD_MAX_STRING 1024
 
 /* Simple way to insert a dummy-function */
-#define KWMD_DUMMY_RETURN(r) 						\
+#define WMD_DUMMY_RETURN(r) 						\
 	do { 								\
 		inform(VER_NOTIMPLEMENTED, "A function that's not yet "	\
 			"implemented was accessed at "); 		\
 		return (r); 						\
 	} while (0);
 
-/* Used for kwmd.state to indicate what state we are currently in.
+/* Used for wmd.state to indicate what state we are currently in.
  * Verify state at any given generic function.
  */
 #define STATE_UNINIT 		0x0 // Semi-dummy.
@@ -56,9 +56,20 @@ void inform_real(const unsigned int v,
 #define STATE_MULTIHEAD		1<<6 // Running in multi-head mode. Not yet supported.
 #define STATE_ANY		UINT_MAX
 
-#define ASSERT_STATE(s) assert((kwmd.state & s) == s)
-#define ASSERT_STATE_NOT(s) assert((kwmd.state & s) == 0)
+#define ASSERT_STATE(s) assert((wmd.state & s) == s)
+#define ASSERT_STATE_NOT(s) assert((wmd.state & s) == 0)
 
+typedef enum _t_verbosity_enum {
+	VER_XIGNORED = 0,
+	VER_XHANDLED,
+	VER_CONFIG_CHANGES,
+	VER_CONFIG,
+	VER_STATE,
+	VER_NOTIMPLEMENTED,
+	VER_FILELINE,
+	VER_FUNCTION,
+	VER_NUM
+} t_verbosity_enum;
 /* Defines the various levels of verbosity we may or may not want.
  * The VER_X* masks are not necessarily limited to X. Only IGNORED or
  * HANDLED is provided because we assert on anything else for now. HANDLED
@@ -66,15 +77,16 @@ void inform_real(const unsigned int v,
  *
  * FIXME: Has to be possible to backtrace
  */
-#define VER_XIGNORED		1<<0 // Outside errors we (assumingly) safely ignored
-#define VER_XHANDLED		1<<1 // Outside errors we dealt with
-#define VER_CONFIG_CHANGES	1<<2
-#define VER_CONFIG		1<<3 // Parsing (ie: if a value is incorrect or adjusted)
-#define VER_STATE		1<<4
-#define VER_NOTIMPLEMENTED	1<<5 // When a dummy-function is accessed.
-#define VER_FILELINE		1<<6 // Inlcude __FILE__ and __LINE__ and verbosity
-#define VER_FUNCTION		1<<7 // Include __func__
+typedef struct _t_verbosity {
+	unsigned int position; // From t_verbosity_enum for backtracing
+	unsigned int bit;
+	const char *name;
+	const char *description;
+} t_verbosity;
 
+extern t_verbosity verbosity[];
+
+#define V(s) verbosity[VER_ ## s].bit
 /******************************
  * Core state structures
  */
