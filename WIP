@@ -2,6 +2,8 @@ Work-in-progress file (Almost the same as "TODO" except it's actually being
 done):
 
 - Better param handling
+- Params in lowercase, perhaps?
+- Sorting and cleaning up param{.c,.h,-private.h}
 - Figure out how to handle things like MAX_STRING
 - ..... everything else.
 - MAKE THE WORLD A BETTER PLACE
