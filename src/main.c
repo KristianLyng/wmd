@@ -34,7 +34,6 @@ static void set_defaults(void)
 	wmd.state = 0;
 	wmd.x.dpy = NULL;
 	assert(param_set_default(-1));
-	assert(param_verify(-1));
 	set_state(CONFIGURED);
 }
 
@@ -48,7 +47,7 @@ static void x_connect(void)
 	wmd.x.dpy = XOpenDisplay(NULL);
 	assert(wmd.x.dpy);
 
-	if (P(SYNC).b)
+	if (P(sync).b)
 		XSynchronize(wmd.x.dpy, 1);
 	else
 		XSynchronize(wmd.x.dpy, 0);
@@ -61,7 +60,7 @@ static void x_connect(void)
  */
 static void xxx_poc(void)
 {
-	param_list(stdout, -1);
+	param_show(stdout, -1,UINT_MAX);
 }
 
 /* Let's keep it simple; ten-ish lines max. */

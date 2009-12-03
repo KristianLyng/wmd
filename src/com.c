@@ -93,12 +93,12 @@ void inform_real(const unsigned int v,
 {
 	va_list ap;
 
-	if (wmd.state == STATE_UNINIT || P(VERBOSITY).u & v) {
+	if (wmd.state == STATE_UNINIT || P(verbosity).u & v) {
 
-		if (P(VERBOSITY).u & V(FILELINE))
+		if (P(verbosity).u & V(FILELINE))
 			printf("0x%X:%s:%u: ", v, file, line);
 
-		if (P(VERBOSITY).u & V(FUNCTION))
+		if (P(verbosity).u & V(FUNCTION))
 			printf("%s(): ", func);
 
 		va_start(ap, fmt);

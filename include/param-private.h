@@ -27,23 +27,23 @@
 #define PTYPE_IS_INT(s) (s == PTYPE_INT || s == PTYPE_UINT || s == PTYPE_BOOL || s == PTYPE_MASK)
 
 typedef int (param_verify_func)(
-	const paramtype type,
+	const p_type_enum_t type,
 	const int min,
 	const int max,
-	const t_data data);
-typedef int (param_set_func)(int p, t_data in);
-typedef int (param_print_func)(int p, t_data d, FILE *fd);
+	const p_data_t data);
+typedef int (param_set_func)(int p, p_data_t in);
+typedef int (param_print_func)(int p, p_data_t d, FILE *fd);
 
 /* Different param-types. parse() will malloc if necessary and free() will
  * only actually free something if the param-type requires it (ie: it wont
  * free an integer, but a string will be freed).
  */
-typedef struct _t_ptype {
+typedef struct _p_type_t {
 	const int position;
 	const char *name;
 	param_set_func *set;
 	param_print_func *print;
 	param_verify_func *verify;
-} t_ptype;
+} p_type_t;
 
 #endif

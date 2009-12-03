@@ -25,8 +25,9 @@
  * Verify, verify, verify and then make sure that you can't access these
  * values without verifying them some more. But make it easy.
  *
- * We want as few entry-points the parameters as possible to assure a
- * consistent behavior.
+ * We want as few entry-points to the parameters as possible to assure a
+ * consistent behavior and that we only have to solve a problem in one
+ * place.
  *
  * XXX: We may want to split the actual values into it's own file to avoid
  * 	mixing the values of the parameters and the framework to use it.
@@ -56,27 +57,31 @@
  *
  * XXX: Probably also want to move this somewhere I suppose, it's
  * 	reasonably important, after all.
+ *
+ * XXX: The min/max should probably be printed by the type, to avoid
+ * 	showing -1 as the max for MASK, for instance.
  */
-t_param param[P_NUM] = {
-	PD(REPLACE,	BOOL,	0,	b,
-		0,	1,
-		"If set to true, wmd will attempt to replace the running \n"
-		"window manager, otherwise, it will exit if a window \n"
-		"manager already has control over the X session.")
+static param_t param[P_NUM] = {
+PD(replace,	BOOL,	0,	b,
+	0,	1,
+	"If set to true, wmd will attempt to replace the running window\n"
+	"manager, otherwise, it will exit if a window manager already has\n"
+	"control over the X session.\n\n"
+	"For this to work, the running window manager needs to understand\n"
+	"the underlying protocol. FIXME: Clarification.\n")
 
-	PD(SYNC,	BOOL,	0,	b,
-		0,	1,
-		"Run in synchronized X-mode. Easier debugging but \n"
-		"slower, since we have to wait for X.")
+PD(sync,	BOOL,	0,	b,
+	0,	1,
+	"Run in synchronized X-mode.\n\n"
+	"Easier debugging but slower, since we have to wait for X.")
 
-	PD(VERBOSITY, 	MASK,	(UINT_MAX ^ (1<<VER_FILELINE)),	u,
-		0,	UINT_MAX,
-		"The verbosity is a bitmask to filter out what sort of \n"
-		"information is sent, and how detailed it is. See \n"
-		"FIXME:arglist for a list of bits and what they do.\n"
-		"You probably want to inverse the mask to see what's\n"
-		"disabled instead of what's enabled (which is everything\n"
-		"except FILELINE by default.")
+PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
+	0,	UINT_MAX,
+	"Bitmask deciding what information to print and how to format it.\n\n"
+	"See FIXME:arglist for a list of bits and what they do.\n\n"
+	"You probably want to inverse the mask to see what is disabled\n"
+	"instead of what is enabled (which is everything except FILELINE\n"
+	"by default.)")
 };
 
 #undef PD
@@ -98,9 +103,22 @@ static param_verify_func ptype_verify_simple;
 static param_verify_func ptype_verify_string;
 static param_verify_func ptype_verify_key;
 
-/* Different param-types we support. Not all min/max values are actually
- * used, as that depends on the specific check function.
+/* Different param-types we support.
  *
+ * the "family" concept is introduced to simplify what paaramtypes can be
+ * handled by the same set of function(s).
+ *
+ * set should free old values and allocate resources as needed. The
+ * value_changed of the parameter should only be run if a real change takes
+ * place.
+ *
+ * print should print just the value specified, the data is an argument so
+ * both default_d and d can be printed.
+ *
+ * verify should sanity check that the data is within the expected
+ * confines. It can safely ignore min/max where relevant, but should verify
+ * that the min/max isn't set if it is ignored (since that will give the
+ * false impression that verify takes it into account).
  */
 #define PA(name, family) 					\
 	[PTYPE_ ## name] = {					\
@@ -109,7 +127,7 @@ static param_verify_func ptype_verify_key;
 		ptype_print_ ## family, 			\
 		ptype_verify_ ## family },
 
-static t_ptype ptype[PTYPE_NUM] = {
+static p_type_t ptype[PTYPE_NUM] = {
 	PA(BOOL, simple)
 	PA(UINT, simple)
 	PA(INT, simple)
@@ -120,6 +138,95 @@ static t_ptype ptype[PTYPE_NUM] = {
 
 #undef PA
 
+/***************************************************************
+ * Common sanity-check and utility-functions.
+ ***************************************************************/
+
+/* Checks the range of p. Since this should never fail, asserts will do.
+ *
+ * XXX: Used extensively. It's not like you should have to worry about this
+ * 	anyway. May be rewritten as a macro to ensure that it's in-line
+ * 	even with debugging on.
+ */
+static inline void param_is_in_range(int p)
+{
+	assert(p >= 0);
+	assert(p < P_NUM);
+	assert(param[p].type >= 0);
+	assert(param[p].type < PTYPE_NUM);
+}
+
+/* Verifies that the d-data is valid for the param stored at p, using the
+ * verify() function specified for that type.
+ */
+static int param_verify_data(int p, const p_data_t d)
+{
+	p_type_t *type = NULL;
+	param_is_in_range(p);
+	/* This should be impossible, as ptype[] is rather static.
+	 * If this ever happens, we are in big trouble and should quit
+	 * before it's too late.
+	 */
+	assert(&ptype[param[p].type] != NULL);
+	assert(ptype[param[p].type].verify);
+
+	type = &ptype[param[p].type];
+
+	if (type->verify(param[p].type, param[p].min, param[p].max, d)) {
+		return 1;
+	} else {
+		inform(V(CONFIG), "Parameter-verification failed for "
+			"%s of type %s",
+			param[p].name,
+			type->name);
+		return 0;
+	}
+}
+
+/* Verify the parameter p.
+ *
+ * XXX: Somewhat of a left-over at the moment since there isn't a lot we
+ * 	know about a parameter besides it data at the moment.
+ */
+static int param_verify(unsigned int p)
+{
+	int i=0;
+	param_is_in_range(p);
+	assert(param[p].name);
+	assert(param[p].description);
+	assert(*param[p].name != '\0');
+	assert(*param[p].description != '\0');
+	i = strlen(param[p].description);
+	if (i< 10) {
+		inform(V(CONFIG), "Alarmingly short description of parameter "
+			"\"%s\" found (%d characters long) during "
+			"verification.", param[p].name, i);
+	}
+	return param_verify_data(p, param[p].d);
+}
+
+/* Inform if the param p is a datatype which we can know if has a value or
+ * not (ie: a pointer to NULL). This can't check simple(int)-type params
+ * since 0 is a valid value to set.
+ *
+ * XXX: This is mostly used for fetching, and may or may not be a problem.
+ *	Bottom line: Check the value in the modules that know if NULL is
+ *	valid or not.
+ */
+static void param_warn_if_unset(const p_enum_t p)
+{
+	if (PTYPE_IS_INT(param[p].type))
+		return;
+	if (param[p].d.v == NULL)
+		inform(V(CONFIG), "null-parameter(%s) accessed  "
+			"or fetched. This could be perfectly ok "
+			"or have serious side-issues.", param[p].name);
+}
+
+/***************************************************************
+ * Parameter type-specific verification, setting and printing.
+ ***************************************************************/
+
 /* Verifies that data contains an int of some sort and that it's within
  * the given range.
  *
@@ -127,10 +234,10 @@ static t_ptype ptype[PTYPE_NUM] = {
  * 	int to store the unsigned to get it within the same bounds... A bit
  * 	pointless just to avoid a tiny bit of code duplication.
  */
-static int ptype_verify_simple(const paramtype type,
+static int ptype_verify_simple(const p_type_enum_t type,
 			      const int min,
 			      const int max,
-			      const t_data data)
+			      const p_data_t data)
 {
 	assert(PTYPE_IS_INT(type));
 
@@ -158,10 +265,10 @@ static int ptype_verify_simple(const paramtype type,
  *
  * Returns 0 for invalid string or the length of the string.
  */
-static int ptype_verify_string(const paramtype type,
+static int ptype_verify_string(const p_type_enum_t type,
 			      const int min,
 			      const int max,
-			      const t_data data)
+			      const p_data_t data)
 {
 	int i;
 
@@ -180,53 +287,19 @@ static int ptype_verify_string(const paramtype type,
 }
 
 /* Dummy-function until keys/actions are implemented */
-static int ptype_verify_key(const paramtype type,
+static int ptype_verify_key(const p_type_enum_t type,
 			   const int min,
 			   const int max,
-			   const t_data data)
+			   const p_data_t data)
 {
 	WMD_DUMMY_RETURN(0);
 }
-
-/* Just checks the range of p. Since this should never fail, asserts will
- * do.
- */
-static void param_is_in_range(int p)
-{
-	assert(p >= 0);
-	assert(p < P_NUM);
-}
-
-static int param_verify_data(int p, const t_data d)
-{
-	t_ptype *type = NULL;
-	param_is_in_range(p);
-	/* This should be impossible, as ptype[] is rather static.
-	 * If this ever happens, we are in big trouble and should quit
-	 * before it's too late.
-	 */
-	assert(&ptype[param[p].type] != NULL);
-	assert(ptype[param[p].type].verify);
-
-	type = &ptype[param[p].type];
-
-	if (type->verify(param[p].type, param[p].min, param[p].max, d)) {
-		return 1;
-	} else {
-		inform(V(CONFIG), "Parameter-verification failed for "
-			"%s of type %s",
-			param[p].name,
-			type->name);
-		return 0;
-	}
-}
-
 /* Set the value of the param p to that of data, assuming it can do by
  * assignment. Only valid for INT, UINT, BOOL etc, not pointer-data.
  *
  * Returns true if value was changed or already set.
  */
-static int ptype_set_simple(int p, t_data data)
+static int ptype_set_simple(int p, p_data_t data)
 {
 	int ret;
 	param_is_in_range(p);
@@ -240,32 +313,33 @@ static int ptype_set_simple(int p, t_data data)
 	/* XXX: During initialization, we want to make sure that we set
 	 * 	everything up.
 	 */	
-	if (!memcmp(&param[p].d, &data, sizeof(t_data)) && STATE_IS(CONFIGURED)) {
-		inform(V(CONFIG_CHANGES), "Not setting parameter %s - value already set.",
-			param[p].description);	
+	if (!memcmp(&param[p].d, &data, sizeof(p_data_t)) && STATE_IS(CONFIGURED)) {
+		inform(V(CONFIG_CHANGES), "Not setting parameter \"%s\" - value already set.",
+			param[p].name);	
 		return 1;
 	}
 
 	param[p].d = data;
-	assert(param_verify(p));
-	assert(!memcmp(&param[p].d, &data, sizeof(t_data)));
+	assert(!memcmp(&param[p].d, &data, sizeof(p_data_t)));
 	return 1;
 }
 
-static int ptype_set_string(int p, t_data data)
-{
-	WMD_DUMMY_RETURN(0);
-}
-static int ptype_set_key(int p, t_data data)
+static int ptype_set_string(int p, p_data_t data)
 {
 	WMD_DUMMY_RETURN(0);
 }
 
-static int ptype_print_key(int p, t_data d, FILE *fd)
+static int ptype_set_key(int p, p_data_t data)
 {
 	WMD_DUMMY_RETURN(0);
 }
-static int ptype_print_simple(int p, t_data d, FILE *fd)
+
+static int ptype_print_key(int p, p_data_t d, FILE *fd)
+{
+	WMD_DUMMY_RETURN(0);
+}
+
+static int ptype_print_simple(int p, p_data_t d, FILE *fd)
 {
 	param_is_in_range(p);
 	assert(PTYPE_IS_INT(param[p].type));
@@ -280,7 +354,7 @@ static int ptype_print_simple(int p, t_data d, FILE *fd)
 			fprintf(fd, "0x%.8X", d.u);
 			break;
 		case PTYPE_BOOL:
-			fprintf(fd, "%s", d.b ? "TRUE" : "FALSE");
+			fprintf(fd, "%s", d.b ? "true" : "false");
 			break;
 		default:
 			assert("Reached default-case when it should be "
@@ -289,13 +363,14 @@ static int ptype_print_simple(int p, t_data d, FILE *fd)
 			inform(V(CORE),"The impossible happened! Abandon"
 				" ship! (printing a simple parameter that"
 				" is apparently not an integer, unsigned "
-				"integer or boolean. Now what...");
+				"integer, bitmask or boolean. Now what...");
 			return 0;
 			break;
 	}
 	return 1;
 }
-static int ptype_print_string(int p, t_data d, FILE *fd)
+
+static int ptype_print_string(int p, p_data_t d, FILE *fd)
 {
 	param_is_in_range(p);
 	assert(param[p].type == PTYPE_STRING);
@@ -303,14 +378,29 @@ static int ptype_print_string(int p, t_data d, FILE *fd)
 	return 1;
 }
 
-static void param_warn_if_unset(const t_param_enum p)
+/***************************************************************
+ * "API"/External access. Check. And. Verify. Everything.
+ ***************************************************************/
+
+
+/* Set the value of param[p] to that of d, if possible. Returns true on
+ * success.
+ */
+int param_set(int p, p_data_t d)
 {
-	if (PTYPE_IS_INT(param[p].type))
-		return;
-	if (param[p].d.v == NULL)
-	if (param[p].d.v == NULL)
-		inform(V(CONFIG), "Fetching a null-parameter(%s).",
-			param[p].name);
+	int ret;
+	param_is_in_range(p);
+	if (STATE_IS(CONFIGURED))
+		inform(V(CONFIG_CHANGES), "Setting value of parameter "
+			"\"%s\"", param[p].name);
+	ret = ptype[param[p].type].set(p, d);
+	if (ret)
+		assert(param_verify(p));
+	else
+		inform(V(CONFIG_CHANGES), "Failed to set value of parameter "
+			"\"%s\". *set() returned %d", ret);
+
+	return ret;
 }
 
 /* Set the default value for param p, or for all parameters if p is -1.
@@ -318,80 +408,77 @@ static void param_warn_if_unset(const t_param_enum p)
  */
 int param_set_default(int p)
 {
-	int i;
 	int ret;
 	if (p == -1) {
-		inform(V(CONFIG), "Setting default values for all parameters");
-		for (i = 0; i < P_NUM; i++) {
-			ret += ! param_set_default(i);
-		}
-		return 1;
+		if (STATE_IS(CONFIGURED))
+			inform(V(CONFIG), "Resetting values for all parameters to default");
+		for (p = 0; p < P_NUM; p++)
+			ret += ! param_set(p, param[p].default_d);
+		return !ret;
 	}
 
-	param_is_in_range(p);
-	return ptype[param[p].type].set(p, param[p].default_d);
+	if (STATE_IS(CONFIGURED))
+		inform(V(CONFIG_CHANGES), "Resetting value of parameter "
+			"\"%s\" to default", param[p].name);
+	return param_set(p, param[p].default_d);
 }
 
-/* Sanity check and verify a param and it's value based on the
- * verification function.
+/* Print information about a single parameter, or all parameter (p == -1).
+ * what defines what is printed, so it could be suitable for using in a
+ * configuration file, passing to a pipe, --help, man-file or whatever
+ * else.
+ */
+#define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
+void param_show(FILE *fd, int p, unsigned int what)
+{
+	if(p == -1) {
+		for(p=0; p < P_NUM; p++)
+			param_show(fd, p, what);
+		return;
+	}
+	param_is_in_range(p);
+	if (WB(COMMENT))
+		fprintf(fd, "\n/* (Generated from param_show())\n");
+
+	if (WB(BOILER))
+		fprintf(fd, "%-14s %-8s %-10d %d\n",
+			param[p].name,
+			ptype[param[p].type].name,
+			param[p].min,
+			param[p].max);
+	
+	if (WB(VALUE)) {
+		fprintf(fd, "%-15s","Value:");
+		ptype[param[p].type].print(p, param[p].d, fd);
+		fprintf(fd, "\n");
+	}
+
+	if (WB(DEFAULT)) {
+		fprintf(fd, "%-15s", "Default:");
+		ptype[param[p].type].print(p, param[p].default_d, fd);
+		fprintf(fd, "\n");
+	}
+
+	if (WB(DESCRIPTION))
+		fprintf(fd, "%s\n", param[p].description);
+
+	if (WB(COMMENT))
+		fprintf(fd, "*/\n");
+
+	if (WB(KEYVALUE)) {
+		fprintf(fd, "%s=", param[p].name);
+		ptype[param[p].type].print(p, param[p].d, fd);
+		fprintf(fd, "\n");
+	}
+}
+#undef WB
+
+/* Return the data of the param p. Should be accessed through the P()
+ * macro.
  *
- * Returns true/false based on success.
+ * XXX: A method to enforce? Is this necessary?
  */
-int param_verify(int p)
-{
-	int i = 0;
-	int ret = 0;
-	if(p == -1) {
-		for(i = 0; i < P_NUM; i++)
-			ret += param_verify(i);
-		return ret;
-	}
-	param_is_in_range(p);
-
-	return param_verify_data(p, param[p].d);
-}
-
-/* Describe the param p on fd. If p is -1, all parameters are described. */
-void param_describe(FILE *fd, int p)
-{
-	int i;
-	if(p == -1) {
-		for(i=0; i < P_NUM; i++)
-			param_describe(fd, i);
-		return;
-	}
-	fprintf(fd, "%-14s %-8s %-10d %d\n",
-		param[p].name,
-		ptype[param[p].type].name,
-		param[p].min,
-		param[p].max);
-	fprintf(fd, "%-15s", "Default:");
-	ptype[param[p].type].print(p, param[p].default_d, fd);
-	fprintf(fd, "\n");
-	fprintf(fd, "%-15s","Value:");
-	ptype[param[p].type].print(p, param[p].d, fd);
-	fprintf(fd, "\n");
-	fprintf(fd, "%s\n\n", param[p].description);
-}
-
-/* List the param p on fd (name, type and value). If p is -1, all
- * parameters are listed
- */
-void param_list(FILE *fd, int p)
-{
-	int i;
-	if(p == -1) {
-		for(i=0; i < P_NUM; i++)
-			param_list(fd, i);
-		return;
-	}
-	fprintf(fd, "%-14s %-8s\t\t",
-		param[p].name,
-		ptype[param[p].type].name);
-	ptype[param[p].type].print(p, param[p].d, fd);
-	fprintf(fd, "\n");
-}
-t_data param_get_data(t_param_enum p) {
+p_data_t param_get_data(p_enum_t p) {
 	param_is_in_range(p);
 	param_warn_if_unset(p);
 	return param[p].d;
