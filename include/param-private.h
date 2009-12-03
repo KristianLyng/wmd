@@ -22,24 +22,28 @@
 #ifndef _PARAM_PRIVATE_H
 #define _PARAM_PRIVATE_H
 
+#include <stdio.h>
 /* Test for various generic integer param-functions.  */
-#define PTYPE_IS_INT(s) (s == PTYPE_INT || s == PTYPE_UINT || s == PTYPE_BOOL)
+#define PTYPE_IS_INT(s) (s == PTYPE_INT || s == PTYPE_UINT || s == PTYPE_BOOL || s == PTYPE_MASK)
 
-typedef int (*verify_function)(
+typedef int (param_verify_func)(
 	const paramtype type,
 	const int min,
 	const int max,
 	const t_data data);
+typedef int (param_set_func)(int p, t_data in);
+typedef int (param_print_func)(int p, t_data d, FILE *fd);
 
-/* Different param-types. The min/max is passed to the verification
- * function to allow re-use of verification functions in case of int, uint
- * and bool.
+/* Different param-types. parse() will malloc if necessary and free() will
+ * only actually free something if the param-type requires it (ie: it wont
+ * free an integer, but a string will be freed).
  */
 typedef struct _t_ptype {
-	const char *desc;
-	int min;
-	int max;
-	verify_function verify;
+	const int position;
+	const char *name;
+	param_set_func *set;
+	param_print_func *print;
+	param_verify_func *verify;
 } t_ptype;
 
 #endif

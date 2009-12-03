@@ -23,30 +23,19 @@
 
 core wmd;
 
-/* Safe setting of state */
-void set_state(const unsigned int state)
-{
-	wmd.state |= state;
-	ASSERT_STATE(state);
-	inform(V(STATE), "state set");
-}
-
-void unset_state(const unsigned int state)
-{
-	wmd.state &= !state;
-	ASSERT_STATE_NOT(state);
-	inform(V(STATE), "state unset");
-}
-
-/* Essentially a controlled reset of wmd (the structure). 
- * Keep in mind that state should already be explicitly set
- * to avoid any confusion.
+/* Essentially a controlled reset of wmd (the structure) and all
+ * parameters. Note that this will mess things up if you run it twice, as
+ * you'll do funny things like reset the dpy regardless of whether you were
+ * connected or not (as we can't trust state, we can't tell if we're
+ * connected or not).
  */
 static void set_defaults(void)
 {
-	ASSERT_STATE_NOT(STATE_ANY);
+	wmd.state = 0;
 	wmd.x.dpy = NULL;
+	assert(param_set_default(-1));
 	assert(param_verify(-1));
+	set_state(CONFIGURED);
 }
 
 /* Connect to the X display, check if it worked and update state. 
@@ -64,7 +53,7 @@ static void x_connect(void)
 	else
 		XSynchronize(wmd.x.dpy, 0);
 
-	set_state(STATE_CONNECTED);
+	set_state(CONNECTED);
 }
 
 /* Temporary feature-testing function for stuff that isn't available
@@ -72,17 +61,15 @@ static void x_connect(void)
  */
 static void xxx_poc(void)
 {
-	inform_describe_verbosity(stdout,-1);
+	param_list(stdout, -1);
 }
 
 /* Let's keep it simple; ten-ish lines max. */
 int main(int argc, char **argv)
 {
-	wmd.state = 0;
-	inform_init();
 	set_defaults();
+	inform_init();
 	x_connect();
 	xxx_poc();
-	inform(V(STATE), "Everything is done");
 	return 0;
 }

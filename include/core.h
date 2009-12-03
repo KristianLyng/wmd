@@ -48,8 +48,25 @@
 #define STATE_MULTIHEAD		1<<6 // Running in multi-head mode. Not yet supported.
 #define STATE_ANY		UINT_MAX
 
-#define ASSERT_STATE(s) assert((wmd.state & s) == s)
-#define ASSERT_STATE_NOT(s) assert((wmd.state & s) == 0)
+#define set_state(s)							\
+	do {								\
+		wmd.state |= STATE_ ## s;				\
+		ASSERT_STATE(s);					\
+		inform(V(STATE), "State set: %s (0x%.3X). Current "	\
+			"state: %.3X", #s, STATE_ ## s, wmd.state);	\
+	} while(0)
+
+#define unset_state(s)							\
+	do {								\
+		wmd.state &= ! STATE_ ## s;				\
+		ASSERT_STATE_NOT(s);					\
+		inform(V(STATE), "State unset: %s (0x%.3X). Current "	\
+			"state: %.3X", #s, STATE_ ## s, wmd.state);	\
+	} while(0)
+
+#define STATE_IS(s) ((wmd.state & STATE_ ## s) == STATE_ ## s)
+#define ASSERT_STATE(s) assert(STATE_IS(s))
+#define ASSERT_STATE_NOT(s) assert((wmd.state & STATE_ ## s) == 0)
 /******************************
  * Core state structures
  */

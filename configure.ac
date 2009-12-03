@@ -17,4 +17,6 @@ AC_SUBST(WMD_REQUIERS)
 AC_CONFIG_FILES([Makefile
 	include/Makefile
 	src/Makefile])
+CFLAGS="-Wall"
 AC_OUTPUT
+

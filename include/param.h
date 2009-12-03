@@ -19,6 +19,8 @@
 #ifndef _PARAM_H
 #define _PARAM_H
 
+#include <stdio.h>
+
 /* FIXME: Does not belong here! Duplicated from core.h for reasons of
  * lazyness.
  */
@@ -28,6 +30,7 @@ typedef enum _paramtype {
 	PTYPE_BOOL = 0,
 	PTYPE_UINT,
 	PTYPE_INT,
+	PTYPE_MASK,
 	PTYPE_STRING,
 	PTYPE_KEY,
 	PTYPE_NUM
@@ -58,6 +61,8 @@ typedef struct _t_param {
 	paramtype type;
 	t_data d; // data/value. Frequently used shorthand.
 	const t_data default_d;
+	int min;
+	int max;	
 } t_param;
 
 /* Verify a parameter with the p-enum. If p is -1, all parameters are
@@ -67,6 +72,21 @@ int param_verify(int p);
 
 /* Fetch the data of a parameter defined by p.  */
 t_data param_get_data(t_param_enum p);
+
+/* Set the default value of a parameter. If p is -1, all parameters are
+ * reset to defaults.
+ */
+int param_set_default(int p);
+
+/* Describe the parameter p on fd, including default and current value.
+ * If p is -1, all parameters are described.
+ */
+void param_describe(FILE *fd, int p);
+
+/* Show the name and value of a parameter on fd. If p is -1, all parameters
+ * are listed.
+ */
+void param_list(FILE *fd, int p);
 
 #define P(i) param_get_data(P_ ## i)
 
