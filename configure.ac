@@ -1,8 +1,8 @@
 
 AC_COPYRIGHT([Copyright (c) 2009 Kristian Lyngstol])
-AC_INIT([wmd], [0.1-devel],,[wmd])
-AC_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE
+AC_INIT([wmd], [0.1-devel],[kristian@bohemians.org])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AC_CONFIG_HEADERS([config.h])
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 AC_PROG_CC
@@ -16,7 +16,8 @@ PKG_CHECK_MODULES([x11], [x11],,[AC_MSG_ERROR([wmd requires x11.])])
 AC_SUBST(WMD_REQUIERS)
 AC_CONFIG_FILES([Makefile
 	include/Makefile
+	doc/Makefile
 	src/Makefile])
-CFLAGS="-Wall"
+AM_CFLAGS="-Wall -Werror"
 AC_OUTPUT
 

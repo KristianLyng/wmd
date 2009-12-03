@@ -408,7 +408,7 @@ int param_set(int p, p_data_t d)
  */
 int param_set_default(int p)
 {
-	int ret;
+	int ret = 0;
 	if (p == -1) {
 		if (STATE_IS(CONFIGURED))
 			inform(V(CONFIG), "Resetting values for all parameters to default");
