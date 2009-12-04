@@ -34,7 +34,7 @@ static void set_defaults(void)
 {
 	wmd.state = 0;
 	wmd.x.dpy = NULL;
-	assert(param_set_default(-1));
+	assert(param_set_default(-1, P_STATE_DEFAULT));
 	set_state(CONFIGURED);
 }
 
@@ -61,13 +61,10 @@ static void x_connect(void)
  */
 static void xxx_poc(void)
 {
-	param_show(stdout, -1,P_WHAT_BIT(KEYVALUE));
-	inform_init(stdout);
-	param_show(stdout, -1,P_WHAT_BIT(KEYVALUE));
-	inform_init(stderr);
-	param_show(stdout, -1,P_WHAT_BIT(KEYVALUE));
-	inform_init((FILE *)&wmd);
-	inform_init(NULL);
+	p_data_t d;
+	d.b = 0;
+	param_set(P_sync, d, P_STATE_USER);
+	param_show(stdout, -1,~ P_WHAT_BIT(STATE_DEFAULTS));
 }
 
 /* List the work in progress. This means that anything generated into the

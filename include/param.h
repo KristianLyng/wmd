@@ -62,25 +62,31 @@ typedef enum _p_what_enum {
 	P_WHAT_DEFAULT,
 	P_WHAT_DESCRIPTION,
 	P_WHAT_KEYVALUE,	// name=value (outside comment)
+	P_WHAT_SOURCE,
+	P_WHAT_STATE_DEFAULTS,	// Params not changed from the default.
 	P_WHAT_NUM
 } p_what_enum_t;
 #define P_WHAT_BIT(s) (1<<P_WHAT_ ## s)
 
-typedef struct _param_t {
-	const char *name;
-	const char *description;
-	p_type_enum_t type;
-	p_data_t d; // data/value. Frequently used shorthand.
-	const p_data_t default_d;
-	int min;
-	int max;	
-} param_t;
+/* Defines where the parameter-value came from in it's current form, which
+ * allows us to set precedence. Higher values override lower ones,
+ * regardless of when they are parsed.
+ */
+typedef enum _p_state_enum_t {
+	P_STATE_DEFAULT = 0,
+	P_STATE_CONFIG,
+	P_STATE_ARGV,
+	P_STATE_USER,
+	P_STATE_NUM
+} p_state_enum_t;
 
 /* Fetch the data of a parameter defined by p.  */
 p_data_t param_get_data(p_enum_t p);
 
-/* Set the value of the param p to that of d. Returns true if the operation
- * was successful.
+/* Set the value of the param p to that of d. Origin is used to determine
+ * if this value came from a config, user or default.
+ *
+ * Returns true if the operation was successful.
  *
  * XXX: Numerous fail checks are in place to catch the most grave errors
  * 	that can be done. Assuming the high-level value of the structure is
@@ -90,12 +96,12 @@ p_data_t param_get_data(p_enum_t p);
  *
  * XXX: May trigger reinitialization of relevant portions of wmd.
  */
-int param_set(int p, p_data_t d);
+int param_set(int p, p_data_t d, int origin);
 
 /* Set the default value of a parameter. If p is -1, all parameters are
  * reset to defaults.
  */
-int param_set_default(int p);
+int param_set_default(int p, int origin);
 
 /* Show parameters on fd, possibly all of them.
  * If p is -1, all parameters are described.

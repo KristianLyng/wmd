@@ -26,6 +26,17 @@
 /* Test for various generic integer param-functions.  */
 #define PTYPE_IS_INT(s) (s == PTYPE_INT || s == PTYPE_UINT || s == PTYPE_BOOL || s == PTYPE_MASK)
 
+typedef struct _param_t {
+	const char *name;
+	const char *description;
+	p_type_enum_t type;
+	unsigned int state; // Where does the value come from
+	p_data_t d; // data/value. Frequently used shorthand.
+	const p_data_t default_d;
+	int min;
+	int max;	
+} param_t;
+
 typedef int (param_verify_func)(
 	const p_type_enum_t type,
 	const int min,

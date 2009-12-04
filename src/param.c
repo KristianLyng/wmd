@@ -49,7 +49,7 @@
  */
 #define PD(name,type,def,field,min,max,desc) 	\
 	[P_ ## name] =				\
-	{ #name, desc, PTYPE_ ## type,		\
+	{ #name, desc, PTYPE_ ## type, 0,	\
 	{ .field = def },			\
 	{ .field = def }, min, max },
 
@@ -68,7 +68,7 @@ PD(replace,	BOOL,	0,	b,
 	"manager, otherwise, it will exit if a window manager already has\n"
 	"control over the X session.\n\n"
 	"For this to work, the running window manager needs to understand\n"
-	"the underlying protocol. FIXME: Clarification.\n")
+	"the underlying protocol.\n\nFIXME: Clarification.")
 
 PD(sync,	BOOL,	0,	b,
 	0,	1,
@@ -105,12 +105,13 @@ static param_verify_func ptype_verify_key;
 
 /* Different param-types we support.
  *
- * the "family" concept is introduced to simplify what paaramtypes can be
- * handled by the same set of function(s).
+ * The "family" concept is introduced to simplify what parameter types can
+ * be handled by the same set of function(s).
  *
  * set should free old values and allocate resources as needed. The
  * value_changed of the parameter should only be run if a real change takes
  * place.
+ * FIXME: no value_changed (yet).
  *
  * print should print just the value specified, the data is an argument so
  * both default_d and d can be printed.
@@ -314,7 +315,7 @@ static int ptype_set_simple(int p, p_data_t data)
 	 * 	everything up.
 	 */	
 	if (!memcmp(&param[p].d, &data, sizeof(p_data_t)) && STATE_IS(CONFIGURED)) {
-		inform(V(CONFIG_CHANGES), "Not setting parameter \"%s\" - value already set.",
+		inform(V(CONFIG_CHANGES), "Not changing parameter \"%s\" - value already set.",
 			param[p].name);	
 		return 1;
 	}
@@ -383,13 +384,21 @@ static int ptype_print_string(int p, p_data_t d, FILE *fd)
  ***************************************************************/
 
 
-/* Set the value of param[p] to that of d, if possible. Returns true on
- * success.
+/* Set the value of param[p] to that of d, if possible. Origin is the
+ * origin of the value being set.
+ *
+ * Returns true on success.
  */
-int param_set(int p, p_data_t d)
+int param_set(int p, p_data_t d, int origin)
 {
 	int ret;
 	param_is_in_range(p);
+	if (origin < param[p].state) {
+		inform(V(CONFIG_CHANGES), "Not setting parameter %s,"
+			" current value has higher priority",
+			param[p].name);
+		return 0;
+	}
 	if (STATE_IS(CONFIGURED))
 		inform(V(CONFIG_CHANGES), "Setting value of parameter "
 			"\"%s\"", param[p].name);
@@ -399,28 +408,36 @@ int param_set(int p, p_data_t d)
 	else
 		inform(V(CONFIG_CHANGES), "Failed to set value of parameter "
 			"\"%s\". *set() returned %d", ret);
-
+	param[p].state = origin;
 	return ret;
 }
 
-/* Set the default value for param p, or for all parameters if p is -1.
+/* Set the default value for param p, or for all parameters if p is -1. 
+ * Origin is where the request came from. Typically this will be DEFAULT
+ * during startup, CONFIG while parsing the config file and USER later on,
+ * even if the user issues a reset to the default.
+ *
  * Returns true if successful.
+ *
+ * XXX: Any origin is valid here, since 'default' should be available
+ * 	during configuration and something that could be issued
+ * 	interactively.
  */
-int param_set_default(int p)
+int param_set_default(int p, int origin)
 {
 	int ret = 0;
 	if (p == -1) {
 		if (STATE_IS(CONFIGURED))
 			inform(V(CONFIG), "Resetting values for all parameters to default");
 		for (p = 0; p < P_NUM; p++)
-			ret += ! param_set(p, param[p].default_d);
+			ret += ! param_set(p, param[p].default_d, origin);
 		return !ret;
 	}
 
 	if (STATE_IS(CONFIGURED))
 		inform(V(CONFIG_CHANGES), "Resetting value of parameter "
 			"\"%s\" to default", param[p].name);
-	return param_set(p, param[p].default_d);
+	return param_set(p, param[p].default_d, origin);
 }
 
 /* Print information about a single parameter, or all parameter (p == -1).
@@ -437,8 +454,12 @@ void param_show(FILE *fd, int p, unsigned int what)
 		return;
 	}
 	param_is_in_range(p);
+	if (!WB(STATE_DEFAULTS)) {
+		if (param[p].state == P_STATE_DEFAULT)
+			return;
+	}
 	if (WB(COMMENT))
-		fprintf(fd, "\n/* (Generated from param_show())\n");
+		fprintf(fd, "/* (Generated from param_show())\n");
 
 	if (WB(BOILER))
 		fprintf(fd, "%-14s %-8s %-10d %d\n",
@@ -458,6 +479,28 @@ void param_show(FILE *fd, int p, unsigned int what)
 		ptype[param[p].type].print(p, param[p].default_d, fd);
 		fprintf(fd, "\n");
 	}
+	if (WB(SOURCE)) {
+		fprintf(fd, "%-15s", "Source:");
+		switch(param[p].state) {
+			case P_STATE_DEFAULT:
+				fprintf(fd, "Default");
+				break;
+			case P_STATE_CONFIG:
+				fprintf(fd, "Configuration file");
+				break;
+			case P_STATE_ARGV:
+				fprintf(fd, "Argument");
+				break;
+			case P_STATE_USER:
+				fprintf(fd, "User-set at run-time");
+				break;
+			default:
+				assert("Fell through to the default-case "
+					"while describing the parameter "
+					"state.");
+		}
+		fprintf(fd, "\n");
+	}
 
 	if (WB(DESCRIPTION))
 		fprintf(fd, "%s\n", param[p].description);
@@ -468,7 +511,7 @@ void param_show(FILE *fd, int p, unsigned int what)
 	if (WB(KEYVALUE)) {
 		fprintf(fd, "%s=", param[p].name);
 		ptype[param[p].type].print(p, param[p].d, fd);
-		fprintf(fd, "\n");
+		fprintf(fd, "\n\n");
 	}
 }
 #undef WB
