@@ -16,7 +16,6 @@ PKG_CHECK_MODULES([x11], [x11],,[AC_MSG_ERROR([wmd requires x11.])])
 AC_SUBST(WMD_REQUIERS)
 AC_CONFIG_FILES([Makefile
 	include/Makefile
-	doc/Makefile
 	src/Makefile])
 AM_CFLAGS="-Wall -Werror"
 AC_OUTPUT

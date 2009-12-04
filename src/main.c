@@ -20,6 +20,7 @@
 #include "param.h"
 #include "com.h"
 #include "core.h"
+#include "WIP.h"
 
 core wmd;
 
@@ -63,11 +64,24 @@ static void xxx_poc(void)
 	param_show(stdout, -1,UINT_MAX);
 }
 
+/* List the work in progress. This means that anything generated into the
+ * WIP.h WIP_list will be printed if NOTIMPLEMENTED is set (it is by
+ * default), which serves as a nice reminder to keep it up to date and
+ * tells everyone what's happening "right now". In theory. No idea if this
+ * is a good thing in the long run, but time will tell.
+ */
+static void wip(void)
+{
+	for (int i = 0; WIP_list[i] != NULL; i++)
+		inform(V(NOTIMPLEMENTED),"%s",WIP_list[i]);
+}
+
 /* Let's keep it simple; ten-ish lines max. */
 int main(int argc, char **argv)
 {
 	set_defaults();
 	inform_init();
+	wip();
 	x_connect();
 	xxx_poc();
 	return 0;
