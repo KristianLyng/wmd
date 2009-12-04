@@ -46,8 +46,10 @@ typedef enum _t_verbosity_enum {
 	VER_NUM
 } t_verbosity_enum;
 
-/* Verify that inform() is ready and sanity-check the verbosity levels. */
-void inform_init(void);
+/* Verify that inform() is ready and sanity-check the verbosity levels.
+ * Also sets up a new file descriptor for log messages.
+ */
+void inform_init(FILE *fd);
 
 /* Describe the p-verbosity level in human readable format on fd. If p is
  * -1, all verbosity levels are described.

@@ -61,7 +61,13 @@ static void x_connect(void)
  */
 static void xxx_poc(void)
 {
-	param_show(stdout, -1,UINT_MAX);
+	param_show(stdout, -1,P_WHAT_BIT(KEYVALUE));
+	inform_init(stdout);
+	param_show(stdout, -1,P_WHAT_BIT(KEYVALUE));
+	inform_init(stderr);
+	param_show(stdout, -1,P_WHAT_BIT(KEYVALUE));
+	inform_init((FILE *)&wmd);
+	inform_init(NULL);
 }
 
 /* List the work in progress. This means that anything generated into the
@@ -80,7 +86,7 @@ static void wip(void)
 int main(int argc, char **argv)
 {
 	set_defaults();
-	inform_init();
+	inform_init(stderr);
 	wip();
 	x_connect();
 	xxx_poc();
