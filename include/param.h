@@ -103,6 +103,7 @@ int param_set(int p, p_data_t d, int origin);
  */
 int param_set_default(int p, int origin);
 
+int param_parse(char *str, int origin);
 /* Show parameters on fd, possibly all of them.
  * If p is -1, all parameters are described.
  */

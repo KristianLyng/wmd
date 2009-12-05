@@ -79,7 +79,12 @@ static void argv_version(void)
 
 static int argv_param(char *arg)
 {
-	WMD_DUMMY_RETURN(0);
+	if(param_parse(arg,P_STATE_ARGV)) {
+		inform(V(CORE), "Unable to parse a parameter specified "
+			"on the command line.");
+		exit(1);
+	}
+	return 0;
 }
 
 static void argv_usage(char **argv)

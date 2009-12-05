@@ -4,5 +4,5 @@ done).
 Note: This file is used use to generate WIP.h based on all lines starting
 with a dash, so keep those lines C-safe (ie: no ")
 
-- Argument-handling
+- Parsing parameters (from any string, like -p foo=bar or config).
 - Formalize the build and clean it up

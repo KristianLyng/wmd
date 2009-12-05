@@ -224,6 +224,22 @@ static void param_warn_if_unset(const p_enum_t p)
 			"or have serious side-issues.", param[p].name);
 }
 
+/* Searches for the parameter with the name 'key' and returns the
+ * index-number (p). Returns negative if it wasn't found.
+ */
+static int param_search_key(char *key)
+{
+	int i;
+	assert(key);
+
+	for (i = 0; i < P_NUM; i++) {
+		if (!strcasecmp(param[i].name,key)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 /***************************************************************
  * Parameter type-specific verification, setting and printing.
  ***************************************************************/
@@ -412,6 +428,67 @@ int param_set(int p, p_data_t d, int origin)
 	return ret;
 }
 
+/* Parse a string to set a parameter.
+ *
+ * Typically passed directly from the config-engine, an argument or over
+ * some other interactive means, thus ample error handling is needed.
+ *
+ * Return:
+ *  0 - Parameter set.
+ *  1 - Bad syntax (not foo=bar)
+ *  2 - Unknown parameter.
+ *  3 - Parameter-data failed verification.
+ */
+int param_parse(char *str, int origin)
+{
+	char *sep = NULL;
+	// FIXME: Hardcoded max-length.
+	char key[1024];
+	int p = -1;
+	int length = 0;
+	char *tmp;
+
+	if (str == NULL) {
+		inform(V(CONFIG), "Not parsing NULL-string as a parameter");
+		return 1;
+	}
+	
+	sep = index(str,'=');
+	if (sep == NULL) {
+		inform(V(CONFIG), "Missing '=' in parameter "
+			"key-value pair: %s", str);
+		return 1;
+	}
+	length = sep - str;
+	if(length >= 1024) {
+		inform(V(CONFIG), "Parameter-name absurdly long?");
+		return 1;
+	}
+	sep++;	
+	tmp = strncpy(key, str, length);
+	assert(tmp == key);
+	
+	key[length] = '\0';
+
+	p = param_search_key(key);
+
+	if (p < 0) {
+		inform(V(CONFIG),"Unknown parameter: %s", key);
+		return 2;
+	}
+	inform(V(CONFIG), "Parsed parameter string to: "
+		"key: %s. length: %d, str: %s, p: %d",
+		key, length, str, p);
+	if (!strcasecmp(sep,"default")) {
+		assert(param_set_default(p, origin));
+		return 0;
+	}
+	return 0;	
+	
+}
+	
+	
+	
 /* Set the default value for param p, or for all parameters if p is -1. 
  * Origin is where the request came from. Typically this will be DEFAULT
  * during startup, CONFIG while parsing the config file and USER later on,
