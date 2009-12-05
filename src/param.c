@@ -459,7 +459,7 @@ void param_show(FILE *fd, int p, unsigned int what)
 			return;
 	}
 	if (WB(COMMENT))
-		fprintf(fd, "/* (Generated from param_show())\n");
+		fprintf(fd, "/*\n");
 
 	if (WB(BOILER))
 		fprintf(fd, "%-14s %-8s %-10d %d\n",
