@@ -1,0 +1,142 @@
+replace=false
+sync=false
+verbosity=0xFFFFFFAF
+mod=Super
+bindings={
+	/* In it's simplest form, bindings work like this:
+	 *
+	 * 	(extra modifier) (combination) = (action) (action-arguments);
+	 *
+	 * Note the semi-colon: binding parsing ignores most forms of white
+	 * space (similar to most programming languages).
+	 *
+	 * Note that the parameter you are setting is 'bindings', this entire
+	 * block is the content of that parameter. In a way, parsing of
+	 * bindings is entirely separate from the rest of the parameters.
+	 *
+	 * Note that mouse and key bindings are handled the same basic way,
+	 * though there are some quirks to be worked out with regards to
+	 * how to deal with mouse dragging in a orderly fashion.
+	 *
+	 * In addition to modifiers, buttons and keys, you can also bind to
+	 * events (use the 'xev' tool to see what events are available).
+	 * This will override the mod-parameter, and allow you to
+	 * enable/disable sloppy focus easily, set tags upon creating a new
+	 * window, set up mouse gestures (ie: super event:MotionNotify =
+	 * gesture tag view left:previous right:next; event:MotionNotify =
+	 * gesture reset; ... or some sort), set some sort of tag or
+	 * something when urgency is set, run a command 
+	 */
+	
+	/* Sets are simple: wherever used, it is the same as copying the
+	 * option once for every element in the set and replacing the
+	 * set-name on the left-hand side of the equal-sign with the
+	 * left-hand side of the element in the set, and the occurrences of
+	 * the set-name on the right-hand side with the corresponding
+	 * right-hand value in the set....
+	 *
+	 * So...
+	 */
+	set navigation = {
+		h = left;
+		j = down;
+		k = up;
+		l = right;
+		button4 = down;
+		button5 = up;
+	};
+
+	navigation = focus window navigation;
+
+	/* The above is the equivalent to:
+	 *
+	 * h = focus window left;
+	 * j = focus window down;
+	 * k = focus window up;
+	 * l = focus window right;
+	 *
+	 * Sets are supported anywhere in the key-handling, and you do not
+	 * need to use both sides of it (in case you want to bind a single
+	 * key to multiple functions, for instance).
+	 *
+	 * Sets are used to keep a single, consistent layout for variants
+	 * of the same operation (ie: if you change what keys to naviagate
+	 * windows with, you probably want the corresponding
+	 * window-movement bindings to match to.
+	 */
+
+	/* Now you can add three more bindings with some modifiers to
+	 * define different functionality but the same argument.
+	 */
+	ctrl navigation = focus head navigation;
+	shift navigation = move window navigation;
+	ctrl shift navigation = focus head next;	
+
+	/* The idea is to send "switch any tag in the range 1-9 with the
+	 * tag I just set. Alternatively, you could write it out:
+	 *
+	 * 1 = tag set -[1-9] +1;
+	 * 2 = tag set -[1-9] +2;
+	 * and so forth.
+	 *
+	 * So this is just a little loop.
+	 * Note that using + and - while setting tags ensures that only the
+	 * listed tags are affected, while omitting it means setting _just_
+	 * this tag. Also note that -[1-9] and - [1-9] is not the same:
+	 * when the - is next to the [, it is added in front of all the
+	 * items substituted, while the extra space means it's just a
+	 * single minus-sign.
+	 */
+	
+	(a in [1-9]) a = tag window set -[1-9] +a;
+
+	/* Or:
+	 * (a in 1 2 3 4 5 6 7 8 9) a = tag window set -1 -2 -3 -4 -5 -6
+	 * 				-7 -8 -9 +a;	
+	 *
+	 * Alternatively, using a pair:
+	 */
+	pair numtags = {
+		(a in [1-9]) a = -[1-9] +a;
+	}
+
+	/* Move the window from this numbered tag to the one I specified. */
+	shift numtags = tag window set numtags;
+
+	/* An other nifty trick if you are on a named tag and wish to
+	 * (temporarily?) add it to a numbered one for easy access:
+	 */
+	ctrl shift numtags = tag window set numtags;
+
+	/* Note that - like sets, you don't need to use the value of the
+	 * loop on both sides of the equal sign.
+	 *
+	 * Example: This sets all the numbered tags for a window. Though
+	 * there's rarely a need for it...
+	 */
+	(tmp in [1-9]) ctrl a = tag window set +tmp;
+
+	/* The above is the same as: */
+	ctrl a = tag window set +[1-9];
+	
+
+	/* Or some fancy pair usage:
+	 * 
+	 * Example 1: Defining keys for applications and what tags they
+	 * should be assigned to in a set.
+	 */
+	pair apptags = {
+		b = web 1;
+		m = mail 2;
+		c = chat 2;
+	}
+	alt apptags = tag set apptags;
+
+	/* FIXME: The rest is not finalized in any way (nor is the above,
+	 * but the rest is just random ideas)
+	 */
+	button1-drag = move window mouse;
+
+	event:EnterNotify = focus mouse;
+}
+	
