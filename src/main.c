@@ -61,10 +61,6 @@ static void x_connect(void)
  */
 static void xxx_poc(void)
 {
-	p_data_t d;
-	d.b = 0;
-	param_set(P_sync, d, P_STATE_USER);
-	param_show(stdout, -1,~ P_WHAT_BIT(STATE_DEFAULTS));
 }
 
 /* List the work in progress. This means that anything generated into the
@@ -84,6 +80,7 @@ int main(int argc, char **argv)
 {
 	set_defaults();
 	inform_init(stderr);
+	argv_init(argc, argv);
 	wip();
 	x_connect();
 	xxx_poc();

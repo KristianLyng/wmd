@@ -31,7 +31,7 @@
 #define WMD_DUMMY_RETURN(r) 						\
 	do { 								\
 		inform(VER_NOTIMPLEMENTED, "A function that's not yet "	\
-			"implemented was accessed at "); 		\
+			"implemented was used");	 		\
 		return (r); 						\
 	} while (0);
 
@@ -82,6 +82,7 @@ typedef struct _core {
 	x x;
 } core;
 
+int argv_init(int argc, char **argv);
 extern core wmd;
 
 #endif // _CORE_H

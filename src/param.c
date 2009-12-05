@@ -78,7 +78,7 @@ PD(sync,	BOOL,	0,	b,
 PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	0,	UINT_MAX,
 	"Bitmask deciding what information to print and how to format it.\n\n"
-	"See FIXME:arglist for a list of bits and what they do.\n\n"
+	"See --help verbosity list for a list of bits and what they do.\n\n"
 	"You probably want to inverse the mask to see what is disabled\n"
 	"instead of what is enabled (which is everything except FILELINE\n"
 	"by default.)")
@@ -459,7 +459,7 @@ void param_show(FILE *fd, int p, unsigned int what)
 			return;
 	}
 	if (WB(COMMENT))
-		fprintf(fd, "/*\n");
+		fprintf(fd, "\n/*\n");
 
 	if (WB(BOILER))
 		fprintf(fd, "%-14s %-8s %-10d %d\n",
@@ -511,7 +511,7 @@ void param_show(FILE *fd, int p, unsigned int what)
 	if (WB(KEYVALUE)) {
 		fprintf(fd, "%s=", param[p].name);
 		ptype[param[p].type].print(p, param[p].d, fd);
-		fprintf(fd, "\n\n");
+		fprintf(fd, "\n");
 	}
 }
 #undef WB
