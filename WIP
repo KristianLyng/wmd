@@ -5,5 +5,4 @@ Note: This file is used use to generate WIP.h based on all lines starting
 with a dash, so keep those lines C-safe (ie: no ")
 
 - Argument-handling
-- Param states: default, config, user, to determine the source of the value
 - Formalize the build and clean it up
