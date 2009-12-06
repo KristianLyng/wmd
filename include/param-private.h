@@ -28,13 +28,14 @@
 
 typedef struct _param_t {
 	const char *name;
-	const char *description;
 	p_type_enum_t type;
 	unsigned int state; // Where does the value come from
 	p_data_t d; // data/value. Frequently used shorthand.
 	const p_data_t default_d;
 	int min;
 	int max;	
+	// FIXME: Better hack than this anyone? Hate limiting docs...
+	const char *description[1024];
 } param_t;
 
 typedef int (param_verify_func)(

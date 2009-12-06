@@ -5,4 +5,9 @@ Note: This file is used use to generate WIP.h based on all lines starting
 with a dash, so keep those lines C-safe (ie: no ")
 
 - Parsing parameters (from any string, like -p foo=bar or config).
+- Better handling of --help without an argument and in general.
+- Determine how to deal with man-files.
+- Parser for config-files
+- fork
+- CLI-interface: Socket and foreground
 - Formalize the build and clean it up

@@ -38,7 +38,7 @@
 
 #include <sys/param.h>
 #include <string.h>
-
+#include <stdarg.h>
 #include "param.h"
 #include "param-private.h"
 #include "com.h"
@@ -46,42 +46,66 @@
 
 /* Param Definition (...).
  * Ensures it's mapped to the enum regardless of sorting.
+ *
+ * Using __VA_ARGS__ instead of just a large char * is to get a list of
+ * lines which can then be optionally commented out in output. A bit hacky,
+ * but the important bit is the readability of the PD() underneath.
  */
-#define PD(name,type,def,field,min,max,desc) 	\
+#define PD(name,type,def,field,min,max, ...) 	\
 	[P_ ## name] =				\
-	{ #name, desc, PTYPE_ ## type, 0,	\
+	{ #name, PTYPE_ ## type, 0,		\
 	{ .field = def },			\
-	{ .field = def }, min, max },
+	{ .field = def }, min, max , 		\
+	{ __VA_ARGS__ } },
+
 
 /* Actual settings matching the param enum in param.h
  *
- * XXX: Probably also want to move this somewhere I suppose, it's
- * 	reasonably important, after all.
+ * Arguments:
+ * name (P_name must exist in param.h)
+ * type (See param-private.h, or the list underneath)
+ * default value
+ * field-name in the data-struct (FIXME!)
+ * minimum value (int)
+ * maximum value (int)
+ * description (separate lines with commas for formatting, PD() takes care
+ * 	of the nasty bits).
  *
- * XXX: The min/max should probably be printed by the type, to avoid
+ * XXX: Note that the min/max are not necessarily used, it depends on the
+ * 	type of parameter.
+ *
+ * FIXME: The min/max should probably be printed by the type, to avoid
  * 	showing -1 as the max for MASK, for instance.
+ *
+ * FIXME: the field-name shouldn't be necessary.
  */
 static param_t param[P_NUM] = {
 PD(replace,	BOOL,	0,	b,
 	0,	1,
-	"If set to true, wmd will attempt to replace the running window\n"
-	"manager, otherwise, it will exit if a window manager already has\n"
-	"control over the X session.\n\n"
-	"For this to work, the running window manager needs to understand\n"
-	"the underlying protocol.\n\nFIXME: Clarification.")
+	"If set to true, wmd will attempt to replace the running window\n",
+	"manager, otherwise, it will exit if a window manager already has\n",
+	"control over the X session.\n",
+	"\n",
+	"For this to work, the running window manager needs to understand\n",
+	"the underlying protocol.\n",
+	"FIXME: Clarification.\n", NULL
+	)
 
 PD(sync,	BOOL,	0,	b,
-	0,	1,
-	"Run in synchronized X-mode.\n\n"
-	"Easier debugging but slower, since we have to wait for X.")
+	0,	1, 
+	"Run in synchronized X-mode.\n","\n",
+	"Easier debugging but slower, since we have to wait for X.\n",
+	NULL)
 
 PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	0,	UINT_MAX,
-	"Bitmask deciding what information to print and how to format it.\n\n"
-	"See --help verbosity list for a list of bits and what they do.\n\n"
-	"You probably want to inverse the mask to see what is disabled\n"
-	"instead of what is enabled (which is everything except FILELINE\n"
-	"by default.)")
+	"Bitmask deciding what information to print and how to format it.\n",
+	"\n",
+	"See --help verbosity list for a list of bits and what they do.\n",
+	"\n",
+	"You probably want to inverse the mask to see what is disabled\n",
+	"instead of what is enabled (which is everything except FILELINE\n",
+	"by default.)\n", NULL)
 };
 
 #undef PD
@@ -188,22 +212,22 @@ static int param_verify_data(int p, const p_data_t d)
  *
  * XXX: Somewhat of a left-over at the moment since there isn't a lot we
  * 	know about a parameter besides it data at the moment.
+ * FIXME: Update for new description format.
  */
 static int param_verify(unsigned int p)
 {
-	int i=0;
 	param_is_in_range(p);
 	assert(param[p].name);
 	assert(param[p].description);
 	assert(*param[p].name != '\0');
-	assert(*param[p].description != '\0');
+/*	assert(*param[p].description != '\0');
 	i = strlen(param[p].description);
 	if (i< 10) {
 		inform(V(CONFIG), "Alarmingly short description of parameter "
 			"\"%s\" found (%d characters long) during "
 			"verification.", param[p].name, i);
 	}
-	return param_verify_data(p, param[p].d);
+*/	return param_verify_data(p, param[p].d);
 }
 
 /* Inform if the param p is a datatype which we can know if has a value or
@@ -521,10 +545,14 @@ int param_set_default(int p, int origin)
  * what defines what is printed, so it could be suitable for using in a
  * configuration file, passing to a pipe, --help, man-file or whatever
  * else.
+ *
+ * XXX: This is a bit extensive in length, but fairly simple, so bare with
+ * 	it for now.
  */
 #define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
 void param_show(FILE *fd, int p, unsigned int what)
 {
+	char *comment = "";
 	if(p == -1) {
 		for(p=0; p < P_NUM; p++)
 			param_show(fd, p, what);
@@ -535,29 +563,36 @@ void param_show(FILE *fd, int p, unsigned int what)
 		if (param[p].state == P_STATE_DEFAULT)
 			return;
 	}
-	if (WB(COMMENT))
-		fprintf(fd, "\n/*\n");
+	if (WB(COMMENT)) {
+		fprintf(fd, "\n");
+		comment = "/* ";
+	}
 
-	if (WB(BOILER))
-		fprintf(fd, "%-14s %-8s %-10d %d\n",
+	if (WB(BOILER)) {
+		fprintf(fd, "%s%-14s %-8s %-10d %d\n",
+			comment,
 			param[p].name,
 			ptype[param[p].type].name,
 			param[p].min,
 			param[p].max);
+		comment = " * ";
+	}
 	
 	if (WB(VALUE)) {
-		fprintf(fd, "%-15s","Value:");
+		fprintf(fd, "%s%-15s",comment,"Value:");
 		ptype[param[p].type].print(p, param[p].d, fd);
 		fprintf(fd, "\n");
+		comment = " * ";
 	}
 
 	if (WB(DEFAULT)) {
-		fprintf(fd, "%-15s", "Default:");
+		fprintf(fd, "%s%-15s", comment, "Default:");
 		ptype[param[p].type].print(p, param[p].default_d, fd);
 		fprintf(fd, "\n");
+		comment = " * ";
 	}
 	if (WB(SOURCE)) {
-		fprintf(fd, "%-15s", "Source:");
+		fprintf(fd, "%s%-15s",comment, "Source:");
 		switch(param[p].state) {
 			case P_STATE_DEFAULT:
 				fprintf(fd, "Default");
@@ -577,13 +612,18 @@ void param_show(FILE *fd, int p, unsigned int what)
 					"state.");
 		}
 		fprintf(fd, "\n");
+		comment = " * ";
 	}
 
-	if (WB(DESCRIPTION))
-		fprintf(fd, "%s\n", param[p].description);
+	if (WB(DESCRIPTION)) {
+		for (int i = 0; param[p].description[i] != NULL; i++) {
+			fprintf(fd, "%s%s", comment, param[p].description[i]);
+		}
+		comment = " * ";
+	}
 
 	if (WB(COMMENT))
-		fprintf(fd, "*/\n");
+		fprintf(fd, " */\n");
 
 	if (WB(KEYVALUE)) {
 		fprintf(fd, "%s=", param[p].name);
