@@ -40,5 +40,5 @@ set -ex
 aclocal
 $LIBTOOLIZE --copy --force
 autoheader
-automake --add-missing --copy --foreign
+automake --add-missing --copy
 autoconf

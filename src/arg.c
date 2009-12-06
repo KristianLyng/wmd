@@ -38,7 +38,7 @@
  * "hai" if it's found...
  */
 static struct option long_options[] = {
-	{"help", 1, 0,'h' },
+	{"help", 2, 0,'h' },
 	{"version", 0, 0, 'V'},
 	{"param", 1, 0, 'p'},
 	{NULL}
@@ -87,17 +87,17 @@ static int argv_param(char *arg)
 	return 0;
 }
 
-static void argv_usage(char **argv)
+static void argv_usage(FILE *fd)
 {
-	fprintf(stderr, "Usage: ");
+	fprintf(fd, "Usage: ");
 	for (int i = 0; argv_options[i].name != NULL; i++) {
-		fprintf(stderr, " --%s%s%s", 
+		fprintf(fd, " --%s%s%s", 
 			argv_options[i].name, 
 			argv_options[i].arguments ? "=" : "",
 			argv_options[i].arguments ? argv_options[i].arguments : "");
 	}
-	fprintf (stderr, "\n");
-	exit(1);
+	fprintf (fd, "\n");
+	exit(0);
 }
 
 /* Print various types of help upon request.
@@ -113,7 +113,7 @@ static void argv_usage(char **argv)
 static int argv_help(char *arg)
 {
 	if (arg == NULL) {
-		argv_usage(NULL);
+		argv_usage(stdout);
 	} else if (!strcmp(arg,"param")) {
 		fprintf(stdout,
 "/* Parameters in WMD are essentially options, or settings.\n"
@@ -148,7 +148,7 @@ static int argv_help(char *arg)
 		inform_describe_verbosity(stdout, -1);
 	} else {
 		inform(V(CORE), "--help without a valid argument.");
-		argv_usage(NULL);
+		argv_usage(stderr);
 	}
 
 	exit(0);
@@ -181,7 +181,7 @@ int argv_init(int argc, char **argv)
 				argv_param(optarg);
 				break;
 			default:
-				argv_usage(argv);
+				argv_usage(stderr);
 				break;
 		}
 	}
