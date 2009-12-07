@@ -674,9 +674,9 @@ int param_parse(char *str, int origin)
 		return 1;
 	}
 
-	if(!ptype[param[p].type].parse(p, sep, origin))
+	if(ptype[param[p].type].parse(p, sep, origin))
 		return param_verify(p);
-	
+		
 	return 0;	
 }
 	

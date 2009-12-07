@@ -68,18 +68,17 @@ static const argv_opt_desc_t argv_options[] = {
 };
 
 /* Getopt() again. : == requires an argument */
-static char *short_options = "h:Vp:";
+static char *short_options = "h::Vp:";
 
 
-static void argv_version(void)
+static void argv_version(FILE *fd)
 {
-	printf(PACKAGE_STRING "\n");
-	exit(0);
+	fprintf(fd, PACKAGE_STRING "\n");
 }
 
 static int argv_param(char *arg)
 {
-	if(param_parse(arg,P_STATE_ARGV)) {
+	if(!param_parse(arg,P_STATE_ARGV)) {
 		inform(V(CORE), "Unable to parse a parameter specified "
 			"on the command line.");
 		exit(1);
@@ -97,7 +96,15 @@ static void argv_usage(FILE *fd)
 			argv_options[i].arguments ? argv_options[i].arguments : "");
 	}
 	fprintf (fd, "\n");
-	exit(0);
+}
+
+void argv_generic_help(FILE *fd) {
+
+	fprintf(fd, PACKAGE_STRING "\n");
+	argv_usage(fd);	
+	fprintf(fd, "\nIf run without any parameters, wmd cures cancer.\n");
+	fprintf(fd, "That being said, read the individual parts of --help"
+		    " to learn more\n");
 }
 
 /* Print various types of help upon request.
@@ -110,10 +117,10 @@ static void argv_usage(FILE *fd)
  * XXX: stdout is used for the param-stuff so it can be piped to a file
  * 	without inform()-noise if necessary.
  */
-static int argv_help(char *arg)
+static void argv_help(char *arg)
 {
 	if (arg == NULL) {
-		argv_usage(stdout);
+		argv_generic_help(stdout);
 	} else if (!strcmp(arg,"param")) {
 		fprintf(stdout,
 "/* Parameters in WMD are essentially options, or settings.\n"
@@ -146,12 +153,12 @@ static int argv_help(char *arg)
 
 	} else if (!strcmp(arg,"verbosity")) {
 		inform_describe_verbosity(stdout, -1);
+	} else if (*arg == '\0') {
+		argv_generic_help(stdout);
 	} else {
 		inform(V(CORE), "--help without a valid argument.");
 		argv_usage(stderr);
 	}
-
-	exit(0);
 }
 
 /* Handle arguments, getopt()-style. May re-arrange argv. May also blow up.
@@ -173,15 +180,18 @@ int argv_init(int argc, char **argv)
 		switch(c) {
 			case 'h':
 				argv_help(optarg);
+				exit(0);
 				break;
 			case 'V':
-				argv_version();
+				argv_version(stdout);
+				exit(0);
 				break;
 			case 'p':
 				argv_param(optarg);
 				break;
 			default:
 				argv_usage(stderr);
+				exit(1);
 				break;
 		}
 	}
@@ -190,6 +200,8 @@ int argv_init(int argc, char **argv)
 		inform(V(CORE), "Non-option argv elements found:");
 		while (optind < argc)
 			inform(V(CORE), "%s", argv[optind++]);
+		argv_usage(stderr);
+		exit(1);
 	}
 	return 1;
 }
