@@ -58,5 +58,4 @@ void inform_describe_verbosity(FILE * fd, const int p);
 /* Passed to inform(): inform(V(XHANDLED),"foo") for instance. */
 #define V(s) (1<<VER_ ## s)
 
-
 #endif				// COM_H

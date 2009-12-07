@@ -368,7 +368,8 @@ static int ptype_set_simple(int p, p_data_t data)
 		return 0;
 	}
 
-	/* XXX: During initialization, we want to make sure that we set
+	/*
+	 * XXX: During initialization, we want to make sure that we set
 	 *      everything up.
 	 */
 	if (!memcmp(&param[p].d, &data, sizeof(p_data_t))
@@ -475,7 +476,9 @@ static int ptype_parse_simple(int p, char *orig, int origin)
 			ret = 2;
 			goto out;
 		}
-		/* FIXME: What if it fails? */
+		/*
+		 * FIXME: What if it fails? 
+		 */
 		ret = param_set(p, d, origin);
 		goto out;
 	} else if (param[p].type == PTYPE_MASK ||
@@ -583,7 +586,6 @@ static int ptype_print_string(int p, p_data_t d, FILE * fd)
  * "API"/External access. Check. And. Verify. Everything.
  ***************************************************************/
 
-
 /* Set the value of param[p] to that of d, if possible. Origin is the
  * origin of the value being set.
  *
@@ -654,7 +656,9 @@ int param_parse(char *str, int origin)
 		return 0;
 	}
 
-	/* Skip the = */
+	/*
+	 * Skip the = 
+	 */
 	sep++;
 	tmp = strncpy(key, str, length);
 	assert(tmp == key);
@@ -784,7 +788,7 @@ void param_show(FILE * fd, int p, unsigned int what)
 			break;
 		default:
 			assert("Fell through to the default-case "
-			       "while describing the parameter " "state.");
+			       "while describing the parameter state.");
 		}
 		fprintf(fd, "\n");
 		comment = " * ";

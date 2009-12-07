@@ -68,7 +68,6 @@ static const argv_opt_desc_t argv_options[] = {
 /* Getopt() again. : == requires an argument */
 static char *short_options = "h::Vp:";
 
-
 static void argv_version(FILE * fd)
 {
 	fprintf(fd, PACKAGE_STRING "\n");
@@ -91,8 +90,8 @@ static void argv_usage(FILE * fd)
 		fprintf(fd, " --%s%s%s",
 			argv_options[i].name,
 			argv_options[i].arguments ? "=" : "",
-			argv_options[i].arguments ? argv_options[i].
-			arguments : "");
+			argv_options[i].
+			arguments ? argv_options[i].arguments : "");
 	}
 	fprintf(fd, "\n");
 }

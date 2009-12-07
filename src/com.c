@@ -66,16 +66,14 @@ t_verbosity verbosity[VER_NUM] = {
 	AV(CONFIG,
 	   "Configuration parsing/verification"),
 	AV(STATE,
-	   "Changes in state, ie: connect/disconnect \n"
-	   "from X, event-handling/state-handling."),
+	   "Changes in state, ie: connect/disconnect from X,\n"
+	   "event-handling/state-handling."),
 	AV(NOTIMPLEMENTED,
-	   "Attempted access to features that only \n"
-	   "have placeholders."),
+	   "Attempted access to features that only have placeholders."),
 	AV(FILELINE,
-	   "Include source-file and line number in \n" "messages."),
+	   "Include source-file and line number in messages."),
 	AV(FUNCTION,
-	   "Include the function that sent the message \n"
-	   "in the output."),
+	   "Include the function that sent the message in the output."),
 	AV(CORE,
 	   "Information related to the core functionality \n"
 	   "of wmd. This should almost always be set."),
@@ -92,7 +90,8 @@ static void com_check_fd(void)
 {
 	if (i_output == NULL)
 		i_output = stderr;
-	/* Should handle this more gracefully, in case we're hooked
+	/*
+	 * Should handle this more gracefully, in case we're hooked
 	 * up to a socket.
 	 */
 	assert(!ferror(i_output));
