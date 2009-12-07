@@ -38,14 +38,14 @@
 /* Used for wmd.state to indicate what state we are currently in.
  * Verify state at any given generic function.
  */
-#define STATE_UNINIT 		0x0 // Semi-dummy.
+#define STATE_UNINIT 		0x0	// Semi-dummy.
 #define STATE_CONFIGURED 	1<<0
-#define STATE_CONNECTED 	1<<1 // To X
-#define STATE_INITILIAZED	1<<2 // Basics are up
-#define STATE_EVENT		1<<3 // Event processing
-#define	STATE_TIMEOUT		1<<4 // No events - timed out
-#define STATE_RECONFIGURE	1<<5 // Reconfiguring
-#define STATE_MULTIHEAD		1<<6 // Running in multi-head mode. Not yet supported.
+#define STATE_CONNECTED 	1<<1	// To X
+#define STATE_INITILIAZED	1<<2	// Basics are up
+#define STATE_EVENT		1<<3	// Event processing
+#define	STATE_TIMEOUT		1<<4	// No events - timed out
+#define STATE_RECONFIGURE	1<<5	// Reconfiguring
+#define STATE_MULTIHEAD		1<<6	// Running in multi-head mode. Not yet supported.
 #define STATE_ANY		UINT_MAX
 
 #define set_state(s)							\
@@ -70,7 +70,7 @@
 /******************************
  * Core state structures
  */
-	
+
 /* X-only state */
 typedef struct _x {
 	Display *dpy;
@@ -85,4 +85,4 @@ typedef struct _core {
 int argv_init(int argc, char **argv);
 extern core wmd;
 
-#endif // _CORE_H
+#endif				// _CORE_H

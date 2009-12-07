@@ -26,8 +26,7 @@
 void inform_real(const unsigned int v,
 		 const char *func,
 		 const char *file,
-		 const unsigned int line,
-		 const char *fmt, ...);
+		 const unsigned int line, const char *fmt, ...);
 
 /* The types of verbosity available. The description is kept in com.c. This
  * should be reasonably opaque to the callers. Keep in mind that order
@@ -49,15 +48,15 @@ typedef enum _t_verbosity_enum {
 /* Verify that inform() is ready and sanity-check the verbosity levels.
  * Also sets up a new file descriptor for log messages.
  */
-void inform_init(FILE *fd);
+void inform_init(FILE * fd);
 
 /* Describe the p-verbosity level in human readable format on fd. If p is
  * -1, all verbosity levels are described.
  */
-void inform_describe_verbosity(FILE *fd, const int p);
+void inform_describe_verbosity(FILE * fd, const int p);
 
 /* Passed to inform(): inform(V(XHANDLED),"foo") for instance. */
 #define V(s) (1<<VER_ ## s)
 
 
-#endif // COM_H
+#endif				// COM_H

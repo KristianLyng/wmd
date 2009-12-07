@@ -29,23 +29,21 @@
 typedef struct _param_t {
 	const char *name;
 	p_type_enum_t type;
-	unsigned int state; // Where does the value come from
-	p_data_t d; // data/value. Frequently used shorthand.
+	unsigned int state;	// Where does the value come from
+	p_data_t d;		// data/value. Frequently used shorthand.
 	const p_data_t default_d;
 	int min;
-	int max;	
+	int max;
 	// FIXME: Better hack than this anyone? Hate limiting docs...
 	const char *description[1024];
 } param_t;
 
-typedef int (param_verify_func)(
-	const p_type_enum_t type,
-	const int min,
-	const int max,
-	const p_data_t data);
-typedef int (param_set_func)(int p, p_data_t in);
-typedef int (param_print_func)(int p, p_data_t d, FILE *fd);
-typedef int (param_parse_func)(int p, char *str, int origin);
+typedef int (param_verify_func) (const p_type_enum_t type,
+				 const int min,
+				 const int max, const p_data_t data);
+typedef int (param_set_func) (int p, p_data_t in);
+typedef int (param_print_func) (int p, p_data_t d, FILE * fd);
+typedef int (param_parse_func) (int p, char *str, int origin);
 
 /* Different param-types. parse() will malloc if necessary and free() will
  * only actually free something if the param-type requires it (ie: it wont

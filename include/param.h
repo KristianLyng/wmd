@@ -57,7 +57,7 @@ typedef enum _p_enum_t {
 } p_enum_t;
 
 typedef enum _p_what_enum {
-	P_WHAT_COMMENT = 0, 	// /* and */
+	P_WHAT_COMMENT = 0,	// /* and */
 	P_WHAT_BOILER,		// name, type, min/max
 	P_WHAT_VALUE,
 	P_WHAT_DEFAULT,
@@ -108,8 +108,8 @@ int param_parse(char *str, int origin);
 /* Show parameters on fd, possibly all of them.
  * If p is -1, all parameters are described.
  */
-void param_show(FILE *fd, int p, unsigned int what);
+void param_show(FILE * fd, int p, unsigned int what);
 
 #define P(i) param_get_data(P_ ## i)
 
-#endif // _PARAM_H
+#endif				// _PARAM_H
