@@ -2,12 +2,11 @@ Work-in-progress file (Almost the same as "TODO" except it's actually being
 done).
 
 Note: This file is used use to generate WIP.h based on all lines starting
-with a dash, so keep those lines C-safe (ie: no ")
+with a dash, so keep those lines C-safe (ie: no "). It turns out it serves
+as a nice way to discipline yourself in how much you aim for: If the list
+is too large, it will be annoying to run wmd, which encourages you to
+prioritize the list.
 
-- Parsing parameters (from any string, like -p foo=bar or config).
 - Better handling of --help without an argument and in general.
-- Determine how to deal with man-files.
+- Clean up and proof-read parsing code
 - Parser for config-files
-- fork
-- CLI-interface: Socket and foreground
-- Formalize the build and clean it up

@@ -45,6 +45,7 @@ typedef int (param_verify_func)(
 	const p_data_t data);
 typedef int (param_set_func)(int p, p_data_t in);
 typedef int (param_print_func)(int p, p_data_t d, FILE *fd);
+typedef int (param_parse_func)(int p, char *str, int origin);
 
 /* Different param-types. parse() will malloc if necessary and free() will
  * only actually free something if the param-type requires it (ie: it wont
@@ -56,6 +57,7 @@ typedef struct _p_type_t {
 	param_set_func *set;
 	param_print_func *print;
 	param_verify_func *verify;
+	param_parse_func *parse;
 } p_type_t;
 
 #endif

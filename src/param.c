@@ -29,6 +29,15 @@
  * consistent behavior and that we only have to solve a problem in one
  * place.
  *
+ * Policies affecting param.c:
+ *  - strip leading and trailing white space
+ *  - Ignore case where relevant.
+ *  - Do not expose internal data structures.
+ *  - Handle allocation internally - let the caller do whatever with the
+ *    input data when we're done with it. In fact, do not modify input data
+ *    at all if it can be avoided.
+ *  - Comments (in parameters/config) are dealt with other places
+ *
  * XXX: We may want to split the actual values into it's own file to avoid
  * 	mixing the values of the parameters and the framework to use it.
  *
@@ -37,8 +46,11 @@
  */
 
 #include <sys/param.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
+
 #include "param.h"
 #include "param-private.h"
 #include "com.h"
@@ -54,7 +66,7 @@
 #define PD(name,type,def,field,min,max, ...) 	\
 	[P_ ## name] =				\
 	{ #name, PTYPE_ ## type, 0,		\
-	{ .field = def },			\
+	{ .v = NULL },				\
 	{ .field = def }, min, max , 		\
 	{ __VA_ARGS__ } },
 
@@ -106,6 +118,11 @@ PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	"You probably want to inverse the mask to see what is disabled\n",
 	"instead of what is enabled (which is everything except FILELINE\n",
 	"by default.)\n", NULL)
+
+PD(name,	STRING,	"test", str,
+	0,	0,
+	"String used mainly to test the STRING-data type until we need it.\n",
+	NULL)
 };
 
 #undef PD
@@ -127,15 +144,16 @@ static param_verify_func ptype_verify_simple;
 static param_verify_func ptype_verify_string;
 static param_verify_func ptype_verify_key;
 
+static param_parse_func ptype_parse_simple;
+static param_parse_func ptype_parse_string;
+static param_parse_func ptype_parse_key;
+
 /* Different param-types we support.
  *
  * The "family" concept is introduced to simplify what parameter types can
  * be handled by the same set of function(s).
  *
  * set should free old values and allocate resources as needed. The
- * value_changed of the parameter should only be run if a real change takes
- * place.
- * FIXME: no value_changed (yet).
  *
  * print should print just the value specified, the data is an argument so
  * both default_d and d can be printed.
@@ -144,13 +162,17 @@ static param_verify_func ptype_verify_key;
  * confines. It can safely ignore min/max where relevant, but should verify
  * that the min/max isn't set if it is ignored (since that will give the
  * false impression that verify takes it into account).
+ *
+ * parse should be able to back out. Avoid assert() based on user input -
+ * encourage it based on stupid code (ie: NULL-data).
  */
 #define PA(name, family) 					\
 	[PTYPE_ ## name] = {					\
 		PTYPE_ ## name, #name,				\
 		ptype_set_ ## family,				\
 		ptype_print_ ## family, 			\
-		ptype_verify_ ## family },
+		ptype_verify_ ## family,			\
+		ptype_parse_ ## family },
 
 static p_type_t ptype[PTYPE_NUM] = {
 	PA(BOOL, simple)
@@ -167,11 +189,8 @@ static p_type_t ptype[PTYPE_NUM] = {
  * Common sanity-check and utility-functions.
  ***************************************************************/
 
-/* Checks the range of p. Since this should never fail, asserts will do.
- *
- * XXX: Used extensively. It's not like you should have to worry about this
- * 	anyway. May be rewritten as a macro to ensure that it's in-line
- * 	even with debugging on.
+/*
+ * Checks the range of p. Since this should never fail, asserts will do.
  */
 static inline void param_is_in_range(int p)
 {
@@ -181,16 +200,18 @@ static inline void param_is_in_range(int p)
 	assert(param[p].type < PTYPE_NUM);
 }
 
-/* Verifies that the d-data is valid for the param stored at p, using the
- * verify() function specified for that type.
+/*
+ * Verifies that the d-data is valid for param[p] based on type.
  */
 static int param_verify_data(int p, const p_data_t d)
 {
 	p_type_t *type = NULL;
 	param_is_in_range(p);
-	/* This should be impossible, as ptype[] is rather static.
+	/*
+	 * This should be impossible, as ptype[] is rather static.
 	 * If this ever happens, we are in big trouble and should quit
 	 * before it's too late.
+	 *
 	 */
 	assert(&ptype[param[p].type] != NULL);
 	assert(ptype[param[p].type].verify);
@@ -208,31 +229,25 @@ static int param_verify_data(int p, const p_data_t d)
 	}
 }
 
-/* Verify the parameter p.
- *
- * XXX: Somewhat of a left-over at the moment since there isn't a lot we
- * 	know about a parameter besides it data at the moment.
- * FIXME: Update for new description format.
- */
 static int param_verify(unsigned int p)
 {
+	int len=0,i=0;
 	param_is_in_range(p);
 	assert(param[p].name);
 	assert(param[p].description);
 	assert(*param[p].name != '\0');
-/*	assert(*param[p].description != '\0');
-	i = strlen(param[p].description);
-	if (i< 10) {
+	for(i=0; param[p].description[i] != NULL; i++) {
+		len += strlen(param[p].description[i]);
+	}
+	if (len< 10) {
 		inform(V(CONFIG), "Alarmingly short description of parameter "
 			"\"%s\" found (%d characters long) during "
-			"verification.", param[p].name, i);
+			"verification.", param[p].name, len);
 	}
-*/	return param_verify_data(p, param[p].d);
+	return param_verify_data(p, param[p].d);
 }
 
-/* Inform if the param p is a datatype which we can know if has a value or
- * not (ie: a pointer to NULL). This can't check simple(int)-type params
- * since 0 is a valid value to set.
+/* Only sensible for params of some pointer (Where NULL means unset).
  *
  * XXX: This is mostly used for fetching, and may or may not be a problem.
  *	Bottom line: Check the value in the modules that know if NULL is
@@ -321,7 +336,7 @@ static int ptype_verify_string(const p_type_enum_t type,
 	
 	for(i = 0; i < MAX(max, WMD_MAX_STRING); i++) {
 		if (data.str[i] == '\0')
-			return i;
+			return 1+i;
 	}
 	inform(V(CONFIG),"String is larger than expected");
 	return 0;
@@ -365,12 +380,150 @@ static int ptype_set_simple(int p, p_data_t data)
 	return 1;
 }
 
+/* Assign a (new) string to the parameter p.
+ *
+ * Note that this is where allocation and free() takes place; if the
+ * calling function wishes to, it can and should free the data in data.
+ *
+ * In other words: Parameters are entirely self contained.
+ */
 static int ptype_set_string(int p, p_data_t data)
+{
+	char *old = NULL;
+	char *new;
+	param_is_in_range(p);
+	assert(param[p].type == PTYPE_STRING);
+	assert(data.str);
+
+	old = param[p].d.str;
+
+	new = malloc(strlen(data.str) * sizeof(char));
+	assert(new);
+	strcpy(new, data.str);
+	param[p].d.str = new;
+
+	if (!param_verify(p)) {
+		inform(V(CONFIG), "Failed to verify param %s after setting "
+			"new string. Rolling back if possible. Side note: "
+			"this is strange, you may want to alert someone...",
+			param[p].name);
+		param[p].d.str = old;
+		free(new);
+		return 0;
+	}
+	if (old)
+		free(old);
+
+	return 1;
+}
+
+static int ptype_set_key(int p, p_data_t data)
 {
 	WMD_DUMMY_RETURN(0);
 }
 
-static int ptype_set_key(int p, p_data_t data)
+/* Parses to a simple data type. Uses goto out for a safe exit, ensuring
+ * the working copy is freed.
+ *
+ * XXX: This is a bit messy, and might benefit from being split up, since
+ * 	it handles both bool and int/uint/mask.
+ */
+static int ptype_parse_simple(int p, char *orig, int origin)
+{
+	p_data_t d;
+	int i, ret = 0;
+	char *str, *full;
+	assert(orig);
+	param_is_in_range(p);
+
+	str = malloc(strlen(orig) * sizeof(char));
+	assert(str);
+	// Wheeee!
+	strcpy(str, orig);
+	full = str;
+
+	i = strlen(str);
+
+	if (i == 0) {
+		inform(V(CONFIG), "String size for simple parameter is 0,"
+			" did you mean 'default'? Param: %s.", param[p].name);
+		ret = 1;
+		goto out;
+	}
+
+	str[i] = '\0';
+
+	if (param[p].type == PTYPE_BOOL) {
+		d.b = 2;
+		if (!strcasecmp(str,"true"))
+			d.b = 1;
+		else if(!strcasecmp(str,"false"))
+			d.b = 0;
+		else if(!strcasecmp(str, "0"))
+			d.b = 0;
+		else if(!strcasecmp(str, "1"))
+			d.b = 1;
+		if (d.b == 2) {
+			inform(V(CONFIG), "Invalid boolean value for "
+				"'%s' (value: %s)", param[p].name, str);
+			ret = 2;
+			goto out;
+		}
+		/* FIXME: What if it fails? */
+		ret = param_set(p, d, origin);
+		goto out;
+	} else if (param[p].type == PTYPE_MASK ||
+		param[p].type == PTYPE_UINT ||
+		param[p].type == PTYPE_INT) {
+		p_data_t d;
+		char *end;
+		long int l;
+		l = strtol(str, &end, 0);
+		if (l == LONG_MIN || l == LONG_MAX) {
+			inform(V(CONFIG), "Param %s way out of range.",
+				param[p].name);
+			ret = 3;
+			goto out;
+		}
+		if (end && *end != '\0') {
+			inform(V(CONFIG), "Param %s had extra garbage: %s",
+				param[p].name, end);
+			ret = 4;
+			goto out;
+		}
+		if (l > UINT_MAX) {
+			inform(V(CONFIG), "Param %s out of range.",
+				param[p].name);
+			ret = 5;
+			goto out;
+		}
+		d.u = l;
+		ret = param_set(p,d,origin);
+		goto out;
+	}
+out:
+	free(full);
+	return ret;
+}
+
+/* Not much to parse, really. 
+ *
+ *
+ * XXX: Probably want to make strings bound by "" eventually, to
+ * 	circumvent whitespace stripping. Probably. Maybe. I dunno, leave me
+ * 	alone.
+ */
+static int ptype_parse_string(int p, char *str, int origin)
+{
+	p_data_t d;
+	
+	assert(str);
+	param_is_in_range(p);
+
+	d.str = str;
+	return param_set(p, d, origin);
+}
+static int ptype_parse_key(int p, char *str, int origin)
 {
 	WMD_DUMMY_RETURN(0);
 }
@@ -456,12 +609,11 @@ int param_set(int p, p_data_t d, int origin)
  *
  * Typically passed directly from the config-engine, an argument or over
  * some other interactive means, thus ample error handling is needed.
+ * Ignore extra leading and trailing white space, and case.
  *
- * Return:
- *  0 - Parameter set.
- *  1 - Bad syntax (not foo=bar)
- *  2 - Unknown parameter.
- *  3 - Parameter-data failed verification.
+ * Returns true if it succeeded.
+ *
+ * FIXME: Needs a cleanup, reads like a script, not program code.
  */
 int param_parse(char *str, int origin)
 {
@@ -470,48 +622,63 @@ int param_parse(char *str, int origin)
 	char key[1024];
 	int p = -1;
 	int length = 0;
+	int value_length = 0;
 	char *tmp;
 
 	if (str == NULL) {
 		inform(V(CONFIG), "Not parsing NULL-string as a parameter");
-		return 1;
+		return 0;
 	}
-	
+
+	while (*str != '\0' && isspace(*str))
+		str++;
+			
 	sep = index(str,'=');
 	if (sep == NULL) {
 		inform(V(CONFIG), "Missing '=' in parameter "
 			"key-value pair: %s", str);
-		return 1;
+		return 0;
 	}
 	length = sep - str;
 	if(length >= 1024) {
 		inform(V(CONFIG), "Parameter-name absurdly long?");
-		return 1;
+		return 0;
 	}
-	sep++;	
+	
+	/* Skip the = */
+	sep++;
 	tmp = strncpy(key, str, length);
 	assert(tmp == key);
 	
+	while(length > 0 && isspace(key[length-1]))
+		length--;
+
 	key[length] = '\0';
 
 	p = param_search_key(key);
 
 	if (p < 0) {
 		inform(V(CONFIG),"Unknown parameter: %s", key);
-		return 2;
-	}
-	inform(V(CONFIG), "Parsed parameter string to: "
-		"key: %s. length: %d, str: %s, p: %d",
-		key, length, str, p);
-	if (!strcasecmp(sep,"default")) {
-		assert(param_set_default(p, origin));
 		return 0;
 	}
+
+	while (*sep != '\0' && isspace(*sep))
+		sep++;
+
+	value_length = strlen(sep);
+	while(value_length > 0 && isspace(sep[value_length-1]))
+		value_length--;
+	sep[value_length] = '\0';
+	if (!strcasecmp(sep,"default")) {
+		assert(param_set_default(p, origin));
+		return 1;
+	}
+
+	if(!ptype[param[p].type].parse(p, sep, origin))
+		return param_verify(p);
+	
 	return 0;	
-	
 }
-	
-	
 	
 /* Set the default value for param p, or for all parameters if p is -1. 
  * Origin is where the request came from. Typically this will be DEFAULT

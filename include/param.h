@@ -52,6 +52,7 @@ typedef enum _p_enum_t {
 	P_replace = 0,
 	P_sync,
 	P_verbosity,
+	P_name,
 	P_NUM
 } p_enum_t;
 
