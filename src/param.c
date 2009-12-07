@@ -510,7 +510,7 @@ static int ptype_parse_simple(int p, char *orig, int origin)
 		ret = param_set(p, d, origin);
 		goto out;
 	}
-      out:
+out:
 	free(full);
 	return ret;
 }
