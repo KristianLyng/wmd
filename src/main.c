@@ -72,7 +72,7 @@ static void xxx_poc(void)
 static void wip(void)
 {
 	for (int i = 0; WIP_list[i] != NULL; i++)
-		inform(V(NOTIMPLEMENTED),"%s",WIP_list[i]);
+		inform(V(NOTIMPLEMENTED), "%s", WIP_list[i]);
 }
 
 /* Let's keep it simple; ten-ish lines max. */

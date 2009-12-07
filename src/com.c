@@ -55,32 +55,32 @@ static FILE *i_output = NULL;
 /* Different verbosity levels, as defined in t_verbosity_enum. VER_ isn't
  * included as it's only needed internally. (V() and AV() both add it as
  * needed) 
- */	
+ */
 t_verbosity verbosity[VER_NUM] = {
 	AV(XIGNORED,
-		"Ignored X errors/warnings"),
+	   "Ignored X errors/warnings"),
 	AV(XHANDLED,
-		"X errors that have been dealt with"),
+	   "X errors that have been dealt with"),
 	AV(CONFIG_CHANGES,
-		"Changes to the configuration"),
+	   "Changes to the configuration"),
 	AV(CONFIG,
-		"Configuration parsing/verification"),
+	   "Configuration parsing/verification"),
 	AV(STATE,
-		"Changes in state, ie: connect/disconnect \n"
-		"from X, event-handling/state-handling."),
+	   "Changes in state, ie: connect/disconnect \n"
+	   "from X, event-handling/state-handling."),
 	AV(NOTIMPLEMENTED,
-		"Attempted access to features that only \n"
-		"have placeholders."),
+	   "Attempted access to features that only \n"
+	   "have placeholders."),
 	AV(FILELINE,
-		"Include source-file and line number in \n"
-		"messages."),
+	   "Include source-file and line number in \n" "messages."),
 	AV(FUNCTION,
-		"Include the function that sent the message \n"
-		"in the output."),
+	   "Include the function that sent the message \n"
+	   "in the output."),
 	AV(CORE,
-		"Information related to the core functionality \n"
-		"of wmd. This should almost always be set."),
+	   "Information related to the core functionality \n"
+	   "of wmd. This should almost always be set."),
 };
+
 #undef AV
 
 /* Make sure the fd is set to something besides NULL. This is mostly just a
@@ -110,8 +110,7 @@ static void com_check_fd(void)
 void inform_real(const unsigned int v,
 		 const char *func,
 		 const char *file,
-		 const unsigned int line,
-		 const char *fmt, ...)
+		 const unsigned int line, const char *fmt, ...)
 {
 	va_list ap;
 
@@ -119,8 +118,7 @@ void inform_real(const unsigned int v,
 
 	if (wmd.state == STATE_UNINIT || P(verbosity).u & v) {
 		if (P(verbosity).u & V(FILELINE))
-			fprintf(i_output, "0x%X:%s:%u: ",
-			v, file, line);
+			fprintf(i_output, "0x%X:%s:%u: ", v, file, line);
 
 		if (P(verbosity).u & V(FUNCTION))
 			fprintf(i_output, "%s(): ", func);
@@ -129,7 +127,7 @@ void inform_real(const unsigned int v,
 		vfprintf(i_output, fmt, ap);
 		va_end(ap);
 
-		fprintf(i_output,"\n");
+		fprintf(i_output, "\n");
 	}
 }
 
@@ -142,7 +140,7 @@ void inform_real(const unsigned int v,
 static void inform_verify_verbosity(int p)
 {
 	assert(verbosity[p].position == p);
-	assert(verbosity[p].bit == 1<<p);
+	assert(verbosity[p].bit == 1 << p);
 	assert(verbosity[p].desc);
 	assert(verbosity[p].name);
 }
@@ -155,41 +153,41 @@ static void inform_verify_verbosity(int p)
  *
  * XXX: What to do with the old one?
  */
-static void inform_set_fd(FILE *fd)
+static void inform_set_fd(FILE * fd)
 {
 	int ret;
 
 	if (i_output == fd)
-		return;	
+		return;
 
 	if (fd == NULL) {
 		inform(V(CORE), "Attempted to switch to a NULL-pointer "
-			"for information messages. Ignoring it.");
+		       "for information messages. Ignoring it.");
 		return;
 	}
-	
+
 	ret = fileno(fd);
 	if (ret == -1) {
-		inform(V(CORE),"Refusing to switch logging to a bad fd");
+		inform(V(CORE), "Refusing to switch logging to a bad fd");
 		return;
 	}
 	ret = ferror(fd);
-	if(ret) {
-		inform(V(CORE),"Attempted to switch file "
-				"descriptor for inform() to one with errors."
-				"Ignoring the change and using the old fd. "
-				"ferror() returned %d, new fd:%d. "
-				" now using: %d",
-				ret, fileno(fd), fileno(i_output));
+	if (ret) {
+		inform(V(CORE), "Attempted to switch file "
+		       "descriptor for inform() to one with errors."
+		       "Ignoring the change and using the old fd. "
+		       "ferror() returned %d, new fd:%d. "
+		       " now using: %d",
+		       ret, fileno(fd), fileno(i_output));
 		if (fileno(fd) == -1)
 			inform(V(CORE), "New fd is -1. Errno is: %d (%s)",
-					errno, strerror(errno));
+			       errno, strerror(errno));
 	} else {
 		inform(V(CORE), "Switching logging-file descriptor "
-				"from %d to %d.", fileno(i_output),
-				fileno(fd));
+		       "from %d to %d.", fileno(i_output), fileno(fd));
 		i_output = fd;
-		inform(V(CORE), "Switched to new file descriptor for logging.");
+		inform(V(CORE),
+		       "Switched to new file descriptor for logging.");
 	}
 }
 
@@ -199,17 +197,19 @@ static void inform_set_fd(FILE *fd)
  * XXX: Probably not very close to the final result, but a reasonable
  * 	place-holder nevertheless.
  */
-void inform_init(FILE *fd) {
+void inform_init(FILE * fd)
+{
 	int i;
 
 	inform_set_fd(fd);
-	
+
 	for (i = 0; i < VER_NUM; i++) {
 		inform_verify_verbosity(i);
 		if (strlen(verbosity[i].desc) < 10) {
-			inform(V(CORE),"Description of verbosity level %s "
-				"(%d, 0x%X) is alarmingly short", verbosity[i].name,
-				i, verbosity[i].bit);
+			inform(V(CORE),
+			       "Description of verbosity level %s "
+			       "(%d, 0x%X) is alarmingly short",
+			       verbosity[i].name, i, verbosity[i].bit);
 		}
 	}
 }
@@ -217,7 +217,7 @@ void inform_init(FILE *fd) {
 /* Describe the verbosity level defined by p on fd. If p is -1, describe
  * all of them.
  */
-void inform_describe_verbosity(FILE *fd, const int p)
+void inform_describe_verbosity(FILE * fd, const int p)
 {
 	int i;
 
@@ -230,8 +230,7 @@ void inform_describe_verbosity(FILE *fd, const int p)
 
 	fprintf(fd, "0x%X\t1<<%d\t\t%s\n",
 		verbosity[p].bit,
-		verbosity[p].position,
-		verbosity[p].name);
+		verbosity[p].position, verbosity[p].name);
 	fprintf(fd, "%s\n\n", verbosity[p].desc);
 	return;
 }
