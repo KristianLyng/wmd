@@ -1,22 +1,38 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
 
+AC_PREREQ(2.61)
 AC_COPYRIGHT([Copyright (c) 2009 Kristian Lyngstol])
 AC_INIT([wmd], [0.1-devel],[kristian@bohemians.org])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
-AC_CONFIG_HEADERS([config.h])
-AC_PROG_LIBTOOL
-AC_PROG_MAKE_SET
-AC_PROG_CC
-AC_PROG_CC_STDC
-if test "x$ac_cv_prog_cc_c99" = xno; then
-	AC_MSG_ERROR([Could not find a C99 compatible compiler])
-fi
+AC_CONFIG_SRCDIR([config.h.in])
+AM_CONFIG_HEADER(config.h)
 
-AC_PATH_X
-PKG_CHECK_MODULES([x11], [x11],,[AC_MSG_ERROR([wmd requires x11.])])
-AC_SUBST(WMD_REQUIERS)
-AC_CONFIG_FILES([Makefile
-	include/Makefile
-	src/Makefile])
+AM_INIT_AUTOMAKE(wmd, 0.1-devel, [-Wall -Werror foreign])
 AM_CFLAGS="-Wall -Werror"
-AC_OUTPUT
+PKG_CHECK_MODULES([x11], [x11],,[AC_MSG_ERROR([wmd requires x11.])])
 
+# Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+
+# Checks for libraries.
+
+# Checks for header files.
+AC_PATH_X
+AC_HEADER_STDC
+AC_CHECK_HEADERS([limits.h stdlib.h string.h sys/param.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+
+# Checks for library functions.
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([strcasecmp strerror strtol])
+
+AC_CONFIG_FILES([Makefile
+                 include/Makefile
+                 src/Makefile])
+AC_OUTPUT

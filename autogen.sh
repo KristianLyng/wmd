@@ -38,7 +38,6 @@ fi
 set -ex
 
 aclocal
-$LIBTOOLIZE --copy --force
 autoheader
 automake --add-missing --copy
 autoconf

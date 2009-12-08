@@ -764,7 +764,8 @@ void param_show(FILE * fd, enum param_id p, unsigned int what)
 	}
 
 	if (WB(DESCRIPTION)) {
-		for (int i = 0; param[p].description[i] != NULL; i++) {
+		int i;
+		for (i = 0; param[p].description[i] != NULL; i++) {
 			fprintf(fd, "%s%s", comment,
 				param[p].description[i]);
 		}

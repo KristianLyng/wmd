@@ -85,8 +85,9 @@ static int argv_param(char *arg)
 
 static void argv_usage(FILE * fd)
 {
+	int i;
 	fprintf(fd, "Usage: ");
-	for (int i = 0; argv_options[i].name != NULL; i++) {
+	for (i = 0; argv_options[i].name != NULL; i++) {
 		fprintf(fd, " --%s%s%s",
 			argv_options[i].name,
 			argv_options[i].arguments ? "=" : "",
