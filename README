@@ -1,11 +1,7 @@
-Random first-draft of wild ideas for a wonderful new WM
+README for wmd - the window management daemon
 
-1. Introduction
-2. Comparison of three other WMs
-2.1 Awesome
-2.2 WMii
-2.3 Compiz
-2.4 Varnish
+1. Installation and usage
+2. Introduction
 3. Project priorities
 4. Releases
 5. Infrastructure
@@ -14,7 +10,27 @@ Random first-draft of wild ideas for a wonderful new WM
 8. Code style
 9. Initial release schedule
 
-1. Introduction
+
+1. Installation and usage
+=========================
+
+From a repo: ./autogensh && ./configure && make && make install
+From a tar-ball: ./configure && make && make install
+
+Running: wmd --help
+
+If it's not in --help, it's not in wmd. If it is, then someone got drunk,
+wohoo!
+
+See WIP (Work In Progress) for day-to-day changes. It's also printed at
+start, unless you turn it off.
+
+The rest of this document is a README on the project as a whole, not wmd
+functionality. As stated above (and below, for that matter), that sort of
+documentation should be in-line, thus available through --help.
+
+
+2. Introduction
 ===============
 
 The Window Management Daemon (wmd), has been an idea growing over a number
@@ -29,227 +45,16 @@ factor that sets wmd apart from similar projects. This will serve as an
 experiment to see if such a development strategy is suited for the "Bazaar
 model" of free software development. Only time will tell.
 
-2. Comparison of three other WMs
-================================
-
-Though wmd doesn't aim to mimic other window managers, it is important to
-remember past merits and learn from the mistakes(?) of the past. Since this
-is based mostly on my (Kristian) experience, I've focused on Compiz (or
-call it Beryl for that matter), WMii and Awesome. Numerous other window
-managers (metacity, kwin, blackbox,...) could've been listed, but so far
-it's the three above that's the focus....
-
-All three window managers have been tested extensively, and I've worked on
-Compiz/Beryl for years. Note that with regards to Awesome and WMii, there
-might be features that I've not discovered, but as features that aren't
-remotely discoverable by me is probably not discoverable by most users,
-I've decided to ignore them.
-
-2.1 Awesome
------------
-A "dynamic tiling window manager". This means it resizes your windows for
-you. It also supports tags, but the support for tags is very limited. It
-uses a concept of "layouts" to perform tiling, which means you have one
-"main" area and one "secondary" area for windows. This works really well,
-as most of the time I have one main terminal and just need an other one to
-look up a man page, run a random command or something similar.
-
-Awesome also has quite good support for multihead, and is generally
-intuitive.
-
-For configuration, LUA is used, and this is where the problems start. LUA
-gives Awesome great power, but also means even the simplest configuration
-file looks complex. On top of that, the documentation for doing simple
-things like telling awesome not to create new windows in the 'master' part
-of the layout, is poorly documented. The default configuration has no
-in-line documentation, and is not very intuitive unless you wish to change
-existing variables slightly.
-
-It seems using LUA as a configuration in Awesome brings great value to a
-very limited set of users, while to a large degree crippling the rest of
-the users.
-
-An other problem experienced with Awesome is a general glitchyness. Two
-simple examples: Certain dialog boxes that needs to be on-top and clearly
-visible (like the confirmation-box of nvidia-settings, which has a
-10-second count down) can easily get stacked behind something else and
-essentially become impossible to find. Secondly, size-hints are not
-properly dealt with; Trying to put a movie outside the "floating" layer, so
-that it would get tiled, tends to make parts of the movie invisible or
-overlap with other windows. These are just two examples that hint of a
-bigger problem.
-
-Lastly, developing Awesome is not actually possible. For reasons beyond my
-understanding, being a XCB developer and Debian developer means that you
-should not make your window manager run on the XCB versions shipped on
-Debian. No, that didn't make sense to me either. Point being: Awesome seems
-to aim to add as many dependencies as possible as quickly as possible. I
-tried to address this problem with the developer(s?), but the response was
-chilly at best. This was when I decided not to bet on Awesome, since
-stability is essential to me.
-
-Conclusion:
-	Pros: Layouts, multihead, easy reloading.
-	Cons: Configuration, developer attitude, glitches and dependencies.
-
-2.2 WMii
---------
-
-WMii, like Awesome, is a "dynamic tiling window manager". Instead of
-layouts, WMii uses a simple concept of columns, each column being largely
-independent. This allows WMii to have easier window navigation, and a
-simpler code base (I would assume). The window navigation of WMii is by far
-the best I've worked with yet; If you want the window below, you just use
-MOD+j, or MOD+l for the one to the right (hjkl being the UNIX-like
-arrow-keys). An other thing that WMii does that Awesome lacked, is display
-a simple welcome file when you run it (for the first time). Since tiling
-window managers are often very different from traditional window managers,
-this was a great help.
-
-WMii also has fairly proper tags. There are some minor issues which
-unfortunately makes it difficult to truly get the most out of WMiis tags,
-but that could be worked out. Tags in wmii can be anything, and are
-dynamically created and removed. A window can have multiple tags, but
-unfortunately, you can only show one tag at a time. An other minor issue
-with major consequence is that by default, tagging a window in WMii removes
-all the other tags, unless you do "MOD+t +tagname". In a typical scenario,
-you want the most used windows on MOD+[1-9], but the windows on those tags
-most likely have other tags too. The problem is if you want to move a
-window from tag 5 to tag 1, you can't use MOD+SHIFT+1, since you will
-remove all other tags from the window, so you will have to do "MOD+T +1
-MOD+T -5", or something similar, which becomes cumbersome. All in all, that
-could be fixed without too much effort.
-
-WMii also seems very Correct in it's implementation, and reasonably well
-thought out. There seems to be an overall goal. I did not experience any
-significant bugs while working on it, though there were some quirky
-defaults.
-
-One major drawback of WMii, however, is the lack of multihead. Since this
-is essential to me, I find it alarming that it's missing at this point in
-WMiis development.
-
-The configuration of WMii is also interesting. WMii uses "plan9 filesystem"
-as it's basic mode of communication with the outside world, and the
-configuration is basically just a regular shell script sending messages
-through p9. This meant it was very hackable, but also quite ugly and it
-quickly looked bloated. It's far easier to deal with than LUA, and somewhat
-better documented, but suffers some of the same problems. You end up with a
-mixture of scripts, "widgets" and configuration. All in all, I think the
-hackability of WMii was amazing, but I'd like to keep it out of my
-configuration file.
-
-Conclusion:
-	Pros: tags, hackability, cleanliness, window navigation
-	Cons: multihead, config-mixup, a bit too simple
-
-2.3 Compiz
-----------
-
-Ah, Compiz... Compiz is a window manageer framework, largely oriented
-around the composite extension and a wish to be exceedingly generic. So
-generic that it does not have any means to be configured at it's core, and
-you actually need a plugin or two to configure it. This opens interesting
-issues like no single way to easily tell people how to configure Compiz, as
-it depends on how it was started. Compiz' modularized approach is, however,
-pretty amazing. It allows very fine-grained control of how the window
-management should be taken care of, and all the features of wmii and
-awesome could be implemented in various Compiz-plugins. But therein lies to
-problem too. Compiz has an insane amount of knobs to twist, and most of
-them are undocumented, badly sorted and generally confusing.
-
-Compiz documentation is practically non-existent. The core design does
-"enforce" settings to have a name and a description, but when those two
-fields are usually filled in like this: Name="K spring"
-Description="Adjusts the K spring", it's pretty useless. And the
-code-documentation is far worse. It doesn't exist. What little does exist
-is written by yours truly, and nobody cares enough to contribute to it,
-even though "everyone" seems to think it's a good thing.
-
-At it's core, Compiz is a research project. When you combine this with the
-problems surrounding it (ie: Immature video drivers), you run into
-problems. I have invested countless hours into Compiz, but I have not seen
-a real change in attitude in my fellow developers. Maybe that's my failure,
-or something else, but the result is that I do not want to work on Compiz
-for now.
-
-Compiz has taught me the necessity for project management and
-documentation.
-
-The plugin-architecture of Compiz, however, is something that's worth
-looking at. It has, perhaps, been taken a bit too far, but it demonstrates
-how a defined API to core functionality can make it easy to implement new
-features without affecting the old ones. Unfortunately, the API in question
-is neither documented nor simple. It's huge, in fact, and there's not real
-way to tell what data structures you're supposed to use when, or how to use
-them or if they are even necessary at all.
-
-Conclusion:
-	Pros: modularized design, external configuration, small core
-	Cons: no documentation on any level, undefined interfaces,
-	continously used as a research project, no single universal way to
-	configure it, too many knobs to turn, ...
-
-2.4 Varnish
------------
-Varnish is a web cache, so why is it listed here? Because I happen to work
-on Varnish and have learned a lot from that experience. It's mainly
-developed by Poul-Henning Kamp, a long-time FreeBSD hacker.
-
-Since Varnish is my day job, I'll keep this simple to avoid sounding like
-an advertisement.
-
-There are many things I've learned from Varnish: The easiest way to keep
-documentation up to date is make sure the documentation is written the same
-place the code is. Our parameters in Varnish are all documented in the same
-place we specify their basic nature, which means they can't really go out
-of date. Varnish also has a "request flow chart" which is kept up to date
-by parsing dot-commands written in the comments for the functions
-describing the actual request flow. Again, difficult to miss. We do,
-however, struggle to keep the manual files up to date, as they are NOT
-generated from source.
-
-Varnish also has a two-fold concept of configuration: the Varnish
-Configuration Language and parameters. Both can be easily changed at
-run-time, depending somewhat of the nature of the change. This is all
-controlled through a "management interface". VCL also ensures that Varnish
-it self does not set policy.
-
-In Varnish, assert() is used extensively, as are miniobjects(Objects with a
-magic field, which ensures that you do not access an invalid object). This
-generally means that we get tremendously useful bug reports, unlike the
-good old "Segmentation fault". This insistence to test everything means
-that while Varnish will crash _fast_ if something is wrong, it will also be
-far easier to fix it, meaning bugs are found and fixed early.
-
-The documentation for Varnish is so-so. Parts of the documentation is
-great, other parts could be better. Mostly, it's all documented though, but
-the nature of this so-so feel of documentation limits Varnish' ability to
-shine a bit.
-
-Varnish also has a little less than 200 automated regression tests for just
-about every bug and feature we have. This will be hard to mimic in a window
-manager, but it's worth noting.
-
-In addition to all this, Varnish is also designed for modern computers, and
-only focus on the type of performance you actually need. This means that it
-is willing to waste virtual memory in order to reduce lock contention, for
-instance. And it's willing to do a bit of extra computation over time in
-order to reduce latency _right_now_.
-
-Conclusion:
-	Pros: Error checking, in-line documentation exposed to users,
-	separated parameters and 'policy', down-to-earth approach to
-	performance.
-	Cons: tricky to follow some of the two-letter acronyms used
-	extensively throughout the code. Not a window manager(err, yeah,
-	that's just a con in this context, it's a pro when you're selling
-	support for a web cache).
+There used to be a section about "other window managers", but instead I'll
+just say this: I was inspired by Beryl, Compiz, WMii and Awesome. For
+better or worse.
 
 3. Project priorities
 =====================
 
-WMD priorities should be, in somewhat prioritized order:
+Summarized: Intuitive, stable and predictable.
+
+wmd priorities should be, in somewhat prioritized order:
 	- Intuitive in every area
 	- Documentation
 	  - Precise, concise, consistent and up to date.
@@ -268,8 +73,6 @@ WMD priorities should be, in somewhat prioritized order:
 	    available where necessary.
 	  - Freedom
 
-Summarized: Intuitive, stable and predictable.
-
 Project management is a strong focus, but should not get in the way of
 developers and users.
 
@@ -280,11 +83,14 @@ include in operating system distributions.
 4. Releases
 ===========
 
+Summary: X.Y.Z(-n): Errata for all wm-bugs and on popularly distributed
+versions.
+
 This is a preliminary release strategy, it's subject to change without
 prior notice during the early releases. Hopefully, this will make
 involvement with wmd easier.
 
-Versions: x.y.z-n
+Versions: x.y.z(-n)
 
 X: Configuration incompatibilities and major refactoring
 Y: Minor refactoring and configuration additions.
@@ -293,32 +99,36 @@ N: Bug fixes.
 
 X: Major, Y: Minor, Z: Patch, -n: errata
 
-After 0.5, 3 z-releases will be bug-maintained upon request/need IE: when
-0.5.9 is released, 0.5.9, 0.5.8 and 0.5.7 will all have n-releases if
-window management bugs are discovered.
+After wmd is reasonably usable (somewhere around 0.5-0.9), release
+maintenance will commence: This means that we(?) will decide on versions we
+maintain with bug-fixes. Packagers are encouraged to state their wishes
+and/or intentions. Up to 3 minor-releases will be maintained with
+z-releases if necessary.
 
-After 2.0 is released, the last version of every X-release will have
-bug-releases on both Z and N-level (ie: feature bugs and window management
-bugs). No Y-releases will be accepted for old X-releases.
+ALL affected versions of a major-release will have errata releases for
+window-management bugs at that point in time if even a vague hint of a
+necessity arise. So let's not have wm-bugs. An example of a wm-bug is a
+window being hidden when it shouldn't be, size-hint related bugs, etc.
 
-Packagers may call the packages whatever they want, kwmd will not adjust
+Packagers may call the packages whatever they want, wmd will not adjust
 version numbers to work around packaging issues if it is not human readable
-without intricate knowledge of packaging systems. The development tip
-should be named "X.Y-devel", where X.Y is the expected next-released
-version, regardless of what the version of the next release will be. We
-begin with 0.1-devel, and the first release will be 0.1.0.
+without intricate knowledge of packaging systems.
 
--n will be omitted for the first x.y.z release, and have a value of
-'-1' for the first bug fix release.
+-n will be omitted until an actual errata is made. (ie: no 0.5.0-0, just
+0.5.0).
+
+WARNING: the z-portion is something we(?) may choose to remove, we will see
+during 0.x if it's necessary. After 0.5 is made, changing the basic
+versioning scheme is not an option.
 
 When a branch for a major version is created, no minor-releases for the
 previous version will be accepted. When a branch for a new minor version is
-made, no patch-releases will be accepted. In addition to the "last 3
-z-releases", errata releases will be made for any version that is included
-in a supported release of an operating system if requested by the packager.
-This is to keep the number of patches kept by distributions at a bare
-minimum and remove the need for keeping separate lists of confirmed bugs.
-	
+made, no patch-releases will be accepted.
+
+To avoid packagers keeping a significant amount of in-house patches, errata
+releases will be made for any version that's used in a reasonably popular
+distribution if the packager wishes.
+
 5. Infrastructure
 =================
 
@@ -334,15 +144,16 @@ The entire software stack in the infrastructure must be free and reasonably
 easy to migrate.
 
 The infrastructure is as important as the rest of the project, but should
-not be overdone. The official project should provide:
+not be overdone. The official project should (in time) provide:
 
  - A version control system, readable for all. Including web-based access
-   (view-only).
+   (view-only on web).
  - A web page
  - An issue tracker
 
 These components do not have to be tightly integrated, but all the services
-should be clearly visible.
+should be clearly visible. A mail list and/or IRC channel might be
+appropriate, but let's not get hasty.
 
 The infrastructure should follow the same basic philosophy as the main
 project. It should remain predictable, intuitive and stable over a long
@@ -351,33 +162,36 @@ period of time.
 6. Licensing and copyright
 ==========================
 
+Summary: You retain copyright, GPL2+, state the source of the code.
+
 All contributions must be compatible with GNU GPL version 2 and include the
 "or a later version"-clause.
 
 The project will be released as GNU GPL version 2 until an equally readable
-license is available to take it's place. Sorry rms.
+license is available to take it's place. Sorry rms. As a promise to my
+fellow developers, I(Kristian) will not change the license on any code
+copyrighted by me to anything besides a GPL-license. (No X-Chat sellouts,
+in other words)
 
 Copyright should be clearly stated. Whoever wrote the code will retain the
 copyright. If code is borrowed, the original source, copyright and license
 must be clearly stated (and compatible).
 
-If you make significant contributions to any part of the project, make sure
-you retain copyright for the work and is added to the THANKS list.
-
-Full name is required for all contributors.
-
 7. Co-operation
 ===============
 
-Any decision that affects the appearance of the project (web
-design, name, etc) should be decided by the most active
-contributors.
+Summary: Don't squabble over bs and let the people to whom it matter most
+decide. "Meritochracy" is a bullshit word.
 
-Respect your fellow contributors, even if they just joined the
-project. Senior and junior contributors deserve the same level of
-respect and consideration. On the other hand, some decisions affect
-the most active contributors more than the less active, and in such
-cases, their needs should be placed first.
+Any decision that affects the appearance of the project (web-design, name,
+etc) should be decided by the most active contributors. If an obvious
+decision can't be reached, then use what we got.
+
+Respect your fellow contributors, even if they just joined the project.
+Senior and junior contributors deserve the same level of respect and
+consideration. On the other hand, some decisions affect the most active
+contributors more than the less active, and in such cases, their needs
+should be placed first.
 
 In the end, reaching agreements is the key. Even when you disagree.
 
@@ -388,23 +202,14 @@ you are alone in a chat-room, speak English. We can not have open
 communication if everyone doesn't speak the same language.
 
 All documentation should be in English. Internationalization is not
-a priority, and will only be accepted if:
- A: It does not hinder any other goal or priority of the project on any
-    level.
- B: The quality of work can be and is proof-read by a trusted contributor.
- C: There is a real need.
- D: The work is complete.
-The last point is difficult to fulfill since we do not distinguish
-between user- and developer-documentation, but is essential for
-that very same reason. Any translation that is not reasonably up to
-date will be excluded from releases, regardless of how small the
-change is. The only exception is errata releases.
+a priority, and will only be accepted if it does not get in the way of the
+other priorities and can be verified by trusted sources to be precise.
 
-Translations will be removed if they are not included in 5 of the
-last 10 releases.
+Translations will be removed if they are not updated reasonably frequently.
 
 8. Code style
 =============
+
 K&R, Linux-style.
 
 Read the doc for Linux if in doubt.
@@ -423,14 +228,13 @@ require much (if any) input sanitizing, but the moment the same function is
 no longer static, it must check basic input. If it's from a user, it must
 check that the value of the input is valid.
 
+Make sure the code is intuitive even if someone hasn't read all the
+header-files.
+
 9. Initial release schedule
 ===========================
 
 This WILL change. But this is the initial plan:
-
-0.0->0.5: Private development, unless project proves itself beyond any
-doubt. (This essentially makes them milestones instead of actual releases).
-Likely to change.
 
 0.1: PoC framework. Switch focus. Execute.
 0.2: Tiling layout engine.
@@ -459,8 +263,8 @@ the tone". 1.x will be used to find the right way to go forward, and see if
 we can discard some broken ideas. Rudimentary multihead should evolve
 during 1.x, and be sane in 2.0.
 
-The schedule is subject to change at any given time. There will not be
-errata-releases for 0.x, while patch-releases are likely.
+The schedule is subject^W guaranteed to change at any given time. There
+will not be errata-releases for 0.x, while patch-releases are likely.
 
 Build system is autoconf/automake and family until a real need for
 something else arise. A switch of build system will require a new major
@@ -468,5 +272,6 @@ version after 1.0. Similar goes for how fond fond we are of XCB. Hopefully,
 the way to go will become evident during 0.x.
 
 During development, the version in the tree will be the to-be-released
-version, possibly with a -devel.
+version, possibly with a -devel. Short story: -devel is not a guarantee for
+a future version.
 
