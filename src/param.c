@@ -22,27 +22,18 @@
  * theory) and therefor needs a reasonably generic and flexible interface
  * to make sure the values are sane.
  *
- * Verify, verify, verify and then make sure that you can't access these
- * values without verifying them some more. But make it easy.
- *
- * We want as few entry-points to the parameters as possible to assure a
- * consistent behavior and that we only have to solve a problem in one
- * place.
- *
  * Policies affecting param.c:
+ *  - Verify everything
+ *  - Make smart interfaces instead of many
+ *  - Do not expose internal data structures and make sure it's not
+ *    something we miss elsewhere.
  *  - strip leading and trailing white space
  *  - Ignore case where relevant.
- *  - Do not expose internal data structures.
  *  - Handle allocation internally - let the caller do whatever with the
  *    input data when we're done with it. In fact, do not modify input data
  *    at all if it can be avoided.
- *  - Comments (in parameters/config) are dealt with other places
+ *  - Configuration-file comments do not reach param_*()
  *
- * XXX: We may want to split the actual values into it's own file to avoid
- * 	mixing the values of the parameters and the framework to use it.
- *
- * XXX: A param-test framework should be included to dry-run param-changes.
- * 	This is particularly important for bindings.
  */
 
 #include <sys/param.h>
@@ -71,7 +62,11 @@
 	{ __VA_ARGS__ } },
 
 /*  *INDENT-OFF*  */
-/* Actual settings matching the param enum in param.h
+
+/*
+ * (The above tells `indent' to not parse this section)
+ *
+ * Actual settings matching the param enum in param.h
  *
  * Arguments:
  * name (P_name must exist in param.h)
@@ -91,7 +86,7 @@
  *
  * FIXME: the field-name shouldn't be necessary.
  */
-static param_t param[P_NUM] = {
+static struct param param[P_NUM] = {
 PD(replace,	BOOL,	0,	b,
 	0,	1,
 	"If set to true, wmd will attempt to replace the running window\n",
@@ -129,9 +124,10 @@ PD(name,	STRING,	"test", str,
 
 /*  *INDENT-ON*  */
 
-/* These are static because you do not want to call the verification
- * params from outside param, instead just call the param-verification
- * functions which in turn will figure out the correct function to call.
+/*
+ * Everything done by param.c on behalf of other modules is verified, so
+ * explicitly telling param.c to verify something is redundant, thus not
+ * exposed.
  */
 
 static param_set_func ptype_set_simple;
@@ -150,7 +146,8 @@ static param_parse_func ptype_parse_simple;
 static param_parse_func ptype_parse_string;
 static param_parse_func ptype_parse_key;
 
-/* Different param-types we support.
+/*
+ * Different param-types we support.
  *
  * The "family" concept is introduced to simplify what parameter types can
  * be handled by the same set of function(s).
@@ -174,27 +171,27 @@ static param_parse_func ptype_parse_key;
 		ptype_set_ ## family,				\
 		ptype_print_ ## family, 			\
 		ptype_verify_ ## family,			\
-		ptype_parse_ ## family },
+		ptype_parse_ ## family }
 
-static p_type_t ptype[PTYPE_NUM] = {
-	PA(BOOL, simple)
-	    PA(UINT, simple)
-	    PA(INT, simple)
-	    PA(MASK, simple)
-	    PA(STRING, string)
-	    PA(KEY, key)
+static struct param_type ptype[PTYPE_NUM] = {
+	PA(BOOL, simple),
+	PA(UINT, simple),
+	PA(INT, simple),
+	PA(MASK, simple),
+	PA(STRING, string),
+	PA(KEY, key)
 };
 
 #undef PA
 
 /***************************************************************
- * Common sanity-check and utility-functions.
+ * Common sanity-check and utility-functions.                  *
  ***************************************************************/
 
 /*
- * Checks the range of p. Since this should never fail, asserts will do.
+ * Checks the range of p. Should never fail.
  */
-static inline void param_is_in_range(int p)
+static inline void param_is_in_range(enum param_id p)
 {
 	assert(p >= 0);
 	assert(p < P_NUM);
@@ -205,31 +202,25 @@ static inline void param_is_in_range(int p)
 /*
  * Verifies that the d-data is valid for param[p] based on type.
  */
-static int param_verify_data(int p, const p_data_t d)
+static int param_verify_data(enum param_id p, const union param_data d)
 {
-	p_type_t *type = NULL;
+	enum param_type_id t;
+
 	param_is_in_range(p);
-	/*
-	 * This should be impossible, as ptype[] is rather static.
-	 * If this ever happens, we are in big trouble and should quit
-	 * before it's too late.
-	 *
-	 */
-	assert(&ptype[param[p].type] != NULL);
-	assert(ptype[param[p].type].verify);
+	t = param[p].type;	
+	assert(&ptype[t] != NULL);
+	assert(ptype[t].verify);
 
-	type = &ptype[param[p].type];
-
-	if (type->verify(param[p].type, param[p].min, param[p].max, d)) {
+	if (ptype[t].verify(t, param[p].min, param[p].max, d)) {
 		return 1;
 	} else {
 		inform(V(CONFIG), "Parameter-verification failed for "
-		       "%s of type %s", param[p].name, type->name);
+		       "%s of type %s", param[p].name, ptype[t].name);
 		return 0;
 	}
 }
 
-static int param_verify(unsigned int p)
+static int param_verify(enum param_id p)
 {
 	int len = 0, i = 0;
 	param_is_in_range(p);
@@ -248,23 +239,8 @@ static int param_verify(unsigned int p)
 	return param_verify_data(p, param[p].d);
 }
 
-/* Only sensible for params of some pointer (Where NULL means unset).
- *
- * XXX: This is mostly used for fetching, and may or may not be a problem.
- *	Bottom line: Check the value in the modules that know if NULL is
- *	valid or not.
- */
-static void param_warn_if_unset(const p_enum_t p)
-{
-	if (PTYPE_IS_INT(param[p].type))
-		return;
-	if (param[p].d.v == NULL)
-		inform(V(CONFIG), "null-parameter(%s) accessed  "
-		       "or fetched. This could be perfectly ok "
-		       "or have serious side-issues.", param[p].name);
-}
-
-/* Searches for the parameter with the name 'key' and returns the
+/*
+ * Searches for the parameter with the name 'key' and returns the
  * index-number (p). Returns negative if it wasn't found.
  */
 static int param_search_key(char *key)
@@ -281,19 +257,15 @@ static int param_search_key(char *key)
 }
 
 /***************************************************************
- * Parameter type-specific verification, setting and printing.
+ * Parameter type-specific verification, setting and printing. *
  ***************************************************************/
 
-/* Verifies that data contains an int of some sort and that it's within
- * the given range.
- *
- * XXX: Turns out that uint and int isn't the same. Perhaps using a larger
- * 	int to store the unsigned to get it within the same bounds... A bit
- * 	pointless just to avoid a tiny bit of code duplication.
+/*
+ * INT, UINT, BOOL, MASK
  */
-static int ptype_verify_simple(const p_type_enum_t type,
+static int ptype_verify_simple(const enum param_type_id type,
 			       const int min,
-			       const int max, const p_data_t data)
+			       const int max, const union param_data data)
 {
 	assert(PTYPE_IS_INT(type));
 
@@ -321,11 +293,11 @@ static int ptype_verify_simple(const p_type_enum_t type,
  *
  * min is ignored.
  *
- * Returns 0 for invalid string or the length of the string.
+ * Returns 0 for invalid string or the length of the string + 1
  */
-static int ptype_verify_string(const p_type_enum_t type,
+static int ptype_verify_string(const enum param_type_id type,
 			       const int min,
-			       const int max, const p_data_t data)
+			       const int max, const union param_data data)
 {
 	int i;
 
@@ -343,10 +315,9 @@ static int ptype_verify_string(const p_type_enum_t type,
 	return 0;
 }
 
-/* Dummy-function until keys/actions are implemented */
-static int ptype_verify_key(const p_type_enum_t type,
+static int ptype_verify_key(const enum param_type_id type,
 			    const int min,
-			    const int max, const p_data_t data)
+			    const int max, const union param_data data)
 {
 	WMD_DUMMY_RETURN(0);
 }
@@ -356,7 +327,7 @@ static int ptype_verify_key(const p_type_enum_t type,
  *
  * Returns true if value was changed or already set.
  */
-static int ptype_set_simple(int p, p_data_t data)
+static int ptype_set_simple(enum param_id p, union param_data data)
 {
 	int ret;
 	param_is_in_range(p);
@@ -372,7 +343,7 @@ static int ptype_set_simple(int p, p_data_t data)
 	 * XXX: During initialization, we want to make sure that we set
 	 *      everything up.
 	 */
-	if (!memcmp(&param[p].d, &data, sizeof(p_data_t))
+	if (!memcmp(&param[p].d, &data, sizeof(union param_data))
 	    && STATE_IS(CONFIGURED)) {
 		inform(V(CONFIG_CHANGES),
 		       "Not changing parameter \"%s\" - value already set.",
@@ -381,7 +352,7 @@ static int ptype_set_simple(int p, p_data_t data)
 	}
 
 	param[p].d = data;
-	assert(!memcmp(&param[p].d, &data, sizeof(p_data_t)));
+	assert(!memcmp(&param[p].d, &data, sizeof(union param_data)));
 	return 1;
 }
 
@@ -392,7 +363,7 @@ static int ptype_set_simple(int p, p_data_t data)
  *
  * In other words: Parameters are entirely self contained.
  */
-static int ptype_set_string(int p, p_data_t data)
+static int ptype_set_string(enum param_id p, union param_data data)
 {
 	char *old = NULL;
 	char *new;
@@ -423,7 +394,7 @@ static int ptype_set_string(int p, p_data_t data)
 	return 1;
 }
 
-static int ptype_set_key(int p, p_data_t data)
+static int ptype_set_key(enum param_id p, union param_data data)
 {
 	WMD_DUMMY_RETURN(0);
 }
@@ -434,9 +405,9 @@ static int ptype_set_key(int p, p_data_t data)
  * XXX: This is a bit messy, and might benefit from being split up, since
  * 	it handles both bool and int/uint/mask.
  */
-static int ptype_parse_simple(int p, char *orig, int origin)
+static int ptype_parse_simple(enum param_id p, char *orig, enum param_origin origin)
 {
-	p_data_t d;
+	union param_data d;
 	int i, ret = 0;
 	char *str, *full;
 	assert(orig);
@@ -484,7 +455,7 @@ static int ptype_parse_simple(int p, char *orig, int origin)
 	} else if (param[p].type == PTYPE_MASK ||
 		   param[p].type == PTYPE_UINT ||
 		   param[p].type == PTYPE_INT) {
-		p_data_t d;
+		union param_data d;
 		char *end;
 		long int l;
 		l = strtol(str, &end, 0);
@@ -522,9 +493,9 @@ out:
  * 	circumvent whitespace stripping. Probably. Maybe. I dunno, leave me
  * 	alone.
  */
-static int ptype_parse_string(int p, char *str, int origin)
+static int ptype_parse_string(enum param_id p, char *str, enum param_origin origin)
 {
-	p_data_t d;
+	union param_data d;
 
 	assert(str);
 	param_is_in_range(p);
@@ -533,17 +504,17 @@ static int ptype_parse_string(int p, char *str, int origin)
 	return param_set(p, d, origin);
 }
 
-static int ptype_parse_key(int p, char *str, int origin)
+static int ptype_parse_key(enum param_id  p, char *str, enum param_origin origin)
 {
 	WMD_DUMMY_RETURN(0);
 }
 
-static int ptype_print_key(int p, p_data_t d, FILE * fd)
+static int ptype_print_key(enum param_id p, union param_data d, FILE * fd)
 {
 	WMD_DUMMY_RETURN(0);
 }
 
-static int ptype_print_simple(int p, p_data_t d, FILE * fd)
+static int ptype_print_simple(enum param_id p, union param_data d, FILE * fd)
 {
 	param_is_in_range(p);
 	assert(PTYPE_IS_INT(param[p].type));
@@ -574,7 +545,7 @@ static int ptype_print_simple(int p, p_data_t d, FILE * fd)
 	return 1;
 }
 
-static int ptype_print_string(int p, p_data_t d, FILE * fd)
+static int ptype_print_string(enum param_id p, union param_data d, FILE * fd)
 {
 	param_is_in_range(p);
 	assert(param[p].type == PTYPE_STRING);
@@ -586,16 +557,14 @@ static int ptype_print_string(int p, p_data_t d, FILE * fd)
  * "API"/External access. Check. And. Verify. Everything.
  ***************************************************************/
 
-/* Set the value of param[p] to that of d, if possible. Origin is the
- * origin of the value being set.
- *
- * Returns true on success.
+/*
+ * Returns true if param[p].d was set to d
  */
-int param_set(int p, p_data_t d, int origin)
+int param_set(enum param_id p, union param_data d, enum param_origin origin)
 {
 	int ret;
 	param_is_in_range(p);
-	if (origin < param[p].state) {
+	if (origin < param[p].origin) {
 		inform(V(CONFIG_CHANGES), "Not setting parameter %s,"
 		       " current value has higher priority",
 		       param[p].name);
@@ -611,7 +580,7 @@ int param_set(int p, p_data_t d, int origin)
 		inform(V(CONFIG_CHANGES),
 		       "Failed to set value of parameter "
 		       "\"%s\". *set() returned %d", ret);
-	param[p].state = origin;
+	param[p].origin = origin;
 	return ret;
 }
 
@@ -625,7 +594,7 @@ int param_set(int p, p_data_t d, int origin)
  *
  * FIXME: Needs a cleanup, reads like a script, not program code.
  */
-int param_parse(char *str, int origin)
+int param_parse(char *str, enum param_origin origin)
 {
 	char *sep = NULL;
 	// FIXME: Hardcoded max-length.
@@ -636,8 +605,7 @@ int param_parse(char *str, int origin)
 	char *tmp;
 
 	if (str == NULL) {
-		inform(V(CONFIG),
-		       "Not parsing NULL-string as a parameter");
+		inform(V(CONFIG), "Not parsing NULL-string as a parameter");
 		return 0;
 	}
 
@@ -651,6 +619,7 @@ int param_parse(char *str, int origin)
 		return 0;
 	}
 	length = sep - str;
+	assert(length >= 0);
 	if (length >= 1024) {
 		inform(V(CONFIG), "Parameter-name absurdly long?");
 		return 0;
@@ -704,7 +673,7 @@ int param_parse(char *str, int origin)
  * 	during configuration and something that could be issued
  * 	interactively.
  */
-int param_set_default(int p, int origin)
+int param_set_default(enum param_id p, enum param_origin origin)
 {
 	int ret = 0;
 	if (p == -1) {
@@ -731,7 +700,7 @@ int param_set_default(int p, int origin)
  * 	it for now.
  */
 #define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
-void param_show(FILE * fd, int p, unsigned int what)
+void param_show(FILE * fd, enum param_id p, unsigned int what)
 {
 	char *comment = "";
 	if (p == -1) {
@@ -741,7 +710,7 @@ void param_show(FILE * fd, int p, unsigned int what)
 	}
 	param_is_in_range(p);
 	if (!WB(STATE_DEFAULTS)) {
-		if (param[p].state == P_STATE_DEFAULT)
+		if (param[p].origin == P_STATE_DEFAULT)
 			return;
 	}
 	if (WB(COMMENT)) {
@@ -773,7 +742,7 @@ void param_show(FILE * fd, int p, unsigned int what)
 	}
 	if (WB(SOURCE)) {
 		fprintf(fd, "%s%-15s", comment, "Source:");
-		switch (param[p].state) {
+		switch (param[p].origin) {
 		case P_STATE_DEFAULT:
 			fprintf(fd, "Default");
 			break;
@@ -814,14 +783,8 @@ void param_show(FILE * fd, int p, unsigned int what)
 
 #undef WB
 
-/* Return the data of the param p. Should be accessed through the P()
- * macro.
- *
- * XXX: A method to enforce? Is this necessary?
- */
-p_data_t param_get_data(p_enum_t p)
+union param_data param_get(enum param_id p)
 {
 	param_is_in_range(p);
-	param_warn_if_unset(p);
 	return param[p].d;
 }

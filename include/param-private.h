@@ -26,36 +26,45 @@
 /* Test for various generic integer param-functions.  */
 #define PTYPE_IS_INT(s) (s == PTYPE_INT || s == PTYPE_UINT || s == PTYPE_BOOL || s == PTYPE_MASK)
 
-typedef struct _param_t {
+/*
+ * A basic parameter has a name (P_name), type (string/int/etc), an origin
+ * (set by config/argument/interactive), the actual value/data, the default
+ * value/data, an "optional" min/max and a description.
+ */
+struct param {
 	const char *name;
-	p_type_enum_t type;
-	unsigned int state;	// Where does the value come from
-	p_data_t d;		// data/value. Frequently used shorthand.
-	const p_data_t default_d;
+	enum param_type_id type;
+	enum param_origin origin;
+	union param_data d;
+	const union param_data default_d;
 	int min;
 	int max;
-	// FIXME: Better hack than this anyone? Hate limiting docs...
+	/*
+	 *  FIXME: Better hack than this anyone?
+	 */
 	const char *description[1024];
-} param_t;
+};
 
-typedef int (param_verify_func) (const p_type_enum_t type,
-				 const int min,
-				 const int max, const p_data_t data);
-typedef int (param_set_func) (int p, p_data_t in);
-typedef int (param_print_func) (int p, p_data_t d, FILE * fd);
-typedef int (param_parse_func) (int p, char *str, int origin);
+/*
+ * Shorthand, sorry about this.
+ */
+typedef int (param_verify_func) (const enum param_type_id type, const int min,
+				 const int max, const union param_data data);
+typedef int (param_set_func) (enum param_id p, union param_data in);
+typedef int (param_print_func) (enum param_id p, union param_data d, FILE * fd);
+typedef int (param_parse_func) (enum param_id p, char *str, enum param_origin origin);
 
 /* Different param-types. parse() will malloc if necessary and free() will
  * only actually free something if the param-type requires it (ie: it wont
  * free an integer, but a string will be freed).
  */
-typedef struct _p_type_t {
+struct param_type {
 	const int position;
 	const char *name;
 	param_set_func *set;
 	param_print_func *print;
 	param_verify_func *verify;
 	param_parse_func *parse;
-} p_type_t;
+};
 
 #endif
