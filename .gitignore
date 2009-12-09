@@ -23,6 +23,7 @@ missing
 src/Makefile
 src/Makefile.in
 src/arg.o
+src/config.o
 src/inform.o
 src/main.o
 src/param.o
