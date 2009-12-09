@@ -142,7 +142,7 @@ static void argv_help(char *arg)
 		argv_generic_help(stdout);
 	} else {
 		inform(V(CORE), "--help without a valid argument.");
-		argv_usage(stderr);    *  So
+		argv_usage(stderr);
 	}
 }
 
