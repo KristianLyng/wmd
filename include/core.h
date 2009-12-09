@@ -88,6 +88,7 @@ typedef struct _core {
 	x x;
 } core;
 
+int config_init(void);
 int argv_init(int argc, char **argv);
 extern core wmd;
 

@@ -182,11 +182,10 @@ static void inform_set_fd(FILE * fd)
 			inform(V(CORE), "New fd is -1. Errno is: %d (%s)",
 			       errno, strerror(errno));
 	} else {
-		inform(V(CORE), "Switching logging-file descriptor "
-		       "from %d to %d.", fileno(i_output), fileno(fd));
 		i_output = fd;
-		inform(V(CORE),
-		       "Switched to new file descriptor for logging.");
+		if (STATE_IS(CONFIGURED))
+			inform(V(CORE),
+					"Switched to new file descriptor for logging.");
 	}
 }
 

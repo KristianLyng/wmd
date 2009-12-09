@@ -35,7 +35,6 @@ static void set_defaults(void)
 	wmd.state = 0;
 	wmd.x.dpy = NULL;
 	assert(param_set_default(P_ALL, P_STATE_DEFAULT));
-	set_state(CONFIGURED);
 }
 
 /* Connect to the X display, check if it worked and update state. 
@@ -54,13 +53,6 @@ static void x_connect(void)
 		XSynchronize(wmd.x.dpy, 0);
 
 	set_state(CONNECTED);
-}
-
-/* Temporary feature-testing function for stuff that isn't available
- * elsewhere yet.
- */
-static void xxx_poc(void)
-{
 }
 
 /* List the work in progress. This means that anything generated into the
@@ -82,8 +74,8 @@ int main(int argc, char **argv)
 	set_defaults();
 	inform_init(stderr);
 	argv_init(argc, argv);
+	assert(config_init());
 	wip();
 	x_connect();
-	xxx_poc();
 	return 0;
 }
