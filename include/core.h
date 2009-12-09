@@ -24,6 +24,12 @@
 #include <stdio.h>
 #include <assert.h>
 
+#define COPYRIGHT_STRING \
+	"Copyright (c) 2009 Kristian Lyngstol"
+#define LICENSE_STRING \
+	"License: GPLv2+: GNU GPL version 2 or later\n" 	\
+	"This is free software: you are free to change and redistribute it.\n"\
+	"There is NO WARRANTY, to the extent permitted by law."
 /* Maximum length of input-strings. */
 #define	WMD_MAX_STRING 1024
 

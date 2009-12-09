@@ -702,7 +702,8 @@ int param_set_default(enum param_id p, enum param_origin origin)
 #define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
 void param_show(FILE * fd, enum param_id p, unsigned int what)
 {
-	char *comment = "";
+	char *comment[] = { "/* ", " * ", "/*", " *" };
+	int com = 0;
 	if (p == -1) {
 		for (p = 0; p < P_NUM; p++)
 			param_show(fd, p, what);
@@ -715,61 +716,63 @@ void param_show(FILE * fd, enum param_id p, unsigned int what)
 	}
 	if (WB(COMMENT)) {
 		fprintf(fd, "\n");
-		comment = "/* ";
+		com = 0;
 	}
 
 	if (WB(BOILER)) {
-		fprintf(fd, "%s%-14s %-8s %-10d %d\n",
-			comment,
+		fprintf(fd, "%skey: %s, type:%s\n",
+			comment[com],
 			param[p].name,
-			ptype[param[p].type].name,
-			param[p].min, param[p].max);
-		comment = " * ";
+			ptype[param[p].type].name);
+		com = 1;
 	}
 
+	if (WB(VALUE) || WB(DEFAULT) || WB(SOURCE)) {
+		fprintf(fd,"%s",comment[com+2]);
+	}
 	if (WB(VALUE)) {
-		fprintf(fd, "%s%-15s", comment, "Value:");
+		fprintf(fd, " value: ");
 		ptype[param[p].type].print(p, param[p].d, fd);
-		fprintf(fd, "\n");
-		comment = " * ";
 	}
 
 	if (WB(DEFAULT)) {
-		fprintf(fd, "%s%-15s", comment, "Default:");
+		fprintf(fd, " default: ");
 		ptype[param[p].type].print(p, param[p].default_d, fd);
-		fprintf(fd, "\n");
-		comment = " * ";
 	}
 	if (WB(SOURCE)) {
-		fprintf(fd, "%s%-15s", comment, "Source:");
+		fprintf(fd, " source: ");
 		switch (param[p].origin) {
 		case P_STATE_DEFAULT:
-			fprintf(fd, "Default");
+			fprintf(fd, "default");
 			break;
 		case P_STATE_CONFIG:
-			fprintf(fd, "Configuration file");
+			fprintf(fd, "configuration file");
 			break;
 		case P_STATE_ARGV:
-			fprintf(fd, "Argument");
+			fprintf(fd, "argument");
 			break;
 		case P_STATE_USER:
-			fprintf(fd, "User-set at run-time");
+			fprintf(fd, "user-set at run-time");
 			break;
 		default:
 			assert("Fell through to the default-case "
 			       "while describing the parameter state.");
 		}
-		fprintf(fd, "\n");
-		comment = " * ";
+	}
+	if (WB(VALUE) || WB(DEFAULT) || WB(SOURCE)) {
+		fprintf(fd,"\n");
+		com = 1;
 	}
 
 	if (WB(DESCRIPTION)) {
 		int i;
+		fprintf(fd, "%s\n",comment[com]);
+		com = 1;
+
 		for (i = 0; param[p].description[i] != NULL; i++) {
-			fprintf(fd, "%s%s", comment,
+			fprintf(fd, "%s%s", comment[com],
 				param[p].description[i]);
 		}
-		comment = " * ";
 	}
 
 	if (WB(COMMENT))

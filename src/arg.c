@@ -44,33 +44,16 @@ static struct option long_options[] = {
 	{NULL}
 };
 
-/* Just used for describing the above stuff. (Wish this wasn't necessary)
+/*
+ * Getopt() again. : == requires an argument. :: == optional 
  */
-typedef struct _argv_opt_desc_t {
-	char *name;
-	char *arguments;
-} argv_opt_desc_t;
-
-static const argv_opt_desc_t argv_options[] = {
-	{
-	 "help",
-	 "[param|paramlist|verbosity]"},
-	{
-	 "version",
-	 NULL,
-	 },
-	{
-	 "param",
-	 "key=value"},
-	{NULL}
-};
-
-/* Getopt() again. : == requires an argument */
-static char *short_options = "h::Vp:";
+static char *short_options = "h::Vp::";
 
 static void argv_version(FILE * fd)
 {
 	fprintf(fd, PACKAGE_STRING "\n");
+	fprintf(fd, COPYRIGHT_STRING "\n");
+	fprintf(fd, LICENSE_STRING "\n");
 }
 
 static int argv_param(char *arg)
@@ -85,22 +68,19 @@ static int argv_param(char *arg)
 
 static void argv_usage(FILE * fd)
 {
-	int i;
-	fprintf(fd, "Usage: ");
-	for (i = 0; argv_options[i].name != NULL; i++) {
-		fprintf(fd, " --%s%s%s",
-			argv_options[i].name,
-			argv_options[i].arguments ? "=" : "",
-			argv_options[i].
-			arguments ? argv_options[i].arguments : "");
-	}
+	fprintf(fd, "Usage: wmd [ options ... ]\n");
+	fprintf(fd, " -V, --version\n\t\tprint the version of wmd and exit.\n");
+	fprintf(fd, " -h[subject], --help=subject\n\t\t"
+		"prints generic help, or on the subject specified and exits\n"
+		"\t\tValid subjects: param,paramlist,verbosity\n");
+	fprintf(fd, " -p key=value, --param=k=v\n\t\t"
+		"set the parameter key to value. Overrides configuration files.\n"
+		"\t\tMultiple -p's can be specified\n");
 	fprintf(fd, "\n");
 }
 
-void argv_generic_help(FILE * fd)
+static void argv_generic_help(FILE * fd)
 {
-
-	fprintf(fd, PACKAGE_STRING "\n");
 	argv_usage(fd);
 	fprintf(fd,
 		"\nIf run without any parameters, wmd cures cancer.\n");
@@ -126,28 +106,28 @@ static void argv_help(char *arg)
 	} else if (!strcmp(arg, "param")) {
 /* *INDENT-OFF* */
 		fprintf(stdout,
-"/* Parameters in WMD are essentially options, or settings.\n"
+"/* wmd is configured by setting parameters.\n"
 " *\n"
-" * All parameters have certain boundaries depending on the type of\n"
-" * parameter. You can set a default by using the \"default\" as the value\n"
-" * of the parameter. The order parameters are prioritized is:\n"
-" * - Interactively set values and arguments on the command line;\n"
-" * - Parameters stored in a configuration file\n"
-" * - Default values\n"
+" * Parameters can be set in a configuration file or read on the\n"
+" * command line.\n"
 " *\n"
-" * This output uses C-style comments, which is the same as the\n"
-" * configuration file of wmd, which means you can pipe it directly into a\n"
-" * file and use it as a configuration file. In fact, that might be how\n"
-" * you are reading this, so just in case: This text was originally\n"
-" * generated with the command: wmd --help param\n"
+" * To explicitly set the value of a parameter to it's default, use:\n"
+" *   sync=default\n"
 " *\n"
-" * If you prefer a smaller configuration file, you can use:\n"
-" * wmd --help paramlist\n"
-" * Which will print just the parameter-name and it's current value\n"
+" * Parameter-names are case insensitive, white-space is generally stripped.\n"
+" * In a configuration file, C-style comments are used (as shown here)\n"
+" *\n"
+" * To make a clean configuration file, simply pipe this output to a file:\n"
+" *   wmd --help=param > .config/wmd\n"
+" *\n"
+" * For just the parameter-name and value, use:\n"
+" *   wmd --help paramlist\n"
 " *\n"
 " * The following is the documentation on all the parameters available\n"
-" * form wmd. They can be be modified with --param key=value, or by using\n"
-" * This output as a configuration file.\n"
+" * form wmd. Either set them in a configuration file or override them with:\n"
+" *    wmd -p key=value -p otherkey=othervalue\n"
+" *\n"
+" * If the same value is supplied multiple times, the last one is used\n"
 " */\n");
 /* *INDENT-ON* */
 		param_show(stdout, -1, UINT_MAX);
@@ -169,7 +149,7 @@ static void argv_help(char *arg)
 /* Handle arguments, getopt()-style. May re-arrange argv. May also blow up.
  * Kaboom.
  *
- * This needs some polish...
+ *
  */
 int argv_init(int argc, char **argv)
 {
