@@ -47,7 +47,7 @@ static struct option long_options[] = {
 /*
  * Getopt() again. : == requires an argument. :: == optional 
  */
-static char *short_options = "h::Vp::";
+static char *short_options = "h::Vp:";
 
 static void argv_version(FILE * fd)
 {
