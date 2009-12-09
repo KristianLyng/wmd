@@ -142,14 +142,13 @@ static void argv_help(char *arg)
 		argv_generic_help(stdout);
 	} else {
 		inform(V(CORE), "--help without a valid argument.");
-		argv_usage(stderr);
+		argv_usage(stderr);    *  So
 	}
 }
 
-/* Handle arguments, getopt()-style. May re-arrange argv. May also blow up.
+/* 
+ * Handle arguments, getopt()-style. May re-arrange argv. May also blow up.
  * Kaboom.
- *
- *
  */
 int argv_init(int argc, char **argv)
 {
