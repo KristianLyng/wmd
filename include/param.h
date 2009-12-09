@@ -58,7 +58,7 @@ enum param_id {
 	P_replace = 0,
 	P_sync,
 	P_verbosity,
-	P_name,
+	P_config,
 	P_NUM,
 	P_ALL
 };

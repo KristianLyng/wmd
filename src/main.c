@@ -18,7 +18,7 @@
 
 #include <stdarg.h>
 #include "param.h"
-#include "com.h"
+#include "inform.h"
 #include "core.h"
 #include "WIP.h"
 

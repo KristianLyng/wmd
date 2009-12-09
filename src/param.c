@@ -44,7 +44,7 @@
 
 #include "param.h"
 #include "param-private.h"
-#include "com.h"
+#include "inform.h"
 #include "core.h"
 
 /* Param Definition (...).
@@ -114,9 +114,11 @@ PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	"instead of what is enabled (which is everything except FILELINE",
 	"by default.)", NULL)
 
-PD(name,	STRING,	"test", str,
+PD(config,	STRING,	"~/.config/wmd", str,
 	0,	0,
-	"String used mainly to test the STRING-data type until we need it.",
+	"Where the configuration file is read.",
+	"",
+	"Mainly presented so it can be overridden with -p config=<file>",
 	NULL)
 };
 

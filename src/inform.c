@@ -16,7 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-/* See com.h for usage.
+/* See inform.h for usage.
  *
  * The communication interface should be able to send information to a
  * generic file descriptor. At the moment, we're not quite there, but for
@@ -28,7 +28,7 @@
 #include <errno.h>
 
 #include "param.h"
-#include "com.h"
+#include "inform.h"
 #include "core.h"
 
 /* Defines the various levels of verbosity we may or may not want. Position

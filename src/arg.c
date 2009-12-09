@@ -23,7 +23,7 @@
 
 #include "config.h"
 #include "param.h"
-#include "com.h"
+#include "inform.h"
 #include "core.h"
 
 /* Getopt is a bit fugly....
