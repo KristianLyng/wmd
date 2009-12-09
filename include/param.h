@@ -60,13 +60,10 @@ enum param_id {
 };
 
 typedef enum _p_what_enum {
-	P_WHAT_COMMENT = 0,	// /* and */
-	P_WHAT_BOILER,		// name, type, min/max
-	P_WHAT_VALUE,
-	P_WHAT_DEFAULT,
+	P_WHAT_BOILER1 = 0,	// name, type, min/max
+	P_WHAT_BOILER2,		// value, default, source
 	P_WHAT_DESCRIPTION,
 	P_WHAT_KEYVALUE,	// name=value (outside comment)
-	P_WHAT_SOURCE,
 	P_WHAT_STATE_DEFAULTS,	// Params not changed from the default.
 	P_WHAT_NUM
 } p_what_enum_t;

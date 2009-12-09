@@ -89,34 +89,34 @@
 static struct param param[P_NUM] = {
 PD(replace,	BOOL,	0,	b,
 	0,	1,
-	"If set to true, wmd will attempt to replace the running window\n",
-	"manager, otherwise, it will exit if a window manager already has\n",
-	"control over the X session.\n",
-	"\n",
-	"For this to work, the running window manager needs to understand\n",
-	"the underlying protocol.\n",
-	"FIXME: Clarification.\n", NULL
+	"If set to true, wmd will attempt to replace the running window",
+	"manager, otherwise, it will exit if a window manager already has",
+	"control over the X session.",
+	"",
+	"For this to work, the running window manager needs to understand",
+	"the underlying protocol.",
+	"FIXME: Clarification.", NULL
 	)
 
 PD(sync,	BOOL,	0,	b,
 	0,	1, 
-	"Run in synchronized X-mode.\n","\n",
-	"Easier debugging but slower, since we have to wait for X.\n",
+	"Run in synchronized X-mode.","",
+	"Easier debugging but slower, since we have to wait for X.",
 	NULL)
 
 PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	0,	UINT_MAX,
-	"Bitmask deciding what information to print and how to format it.\n",
-	"\n",
-	"See --help verbosity list for a list of bits and what they do.\n",
-	"\n",
-	"You probably want to inverse the mask to see what is disabled\n",
-	"instead of what is enabled (which is everything except FILELINE\n",
-	"by default.)\n", NULL)
+	"Bitmask deciding what information to print and how to format it.",
+	"",
+	"See --help verbosity list for a list of bits and what they do.",
+	"",
+	"You probably want to inverse the mask to see what is disabled",
+	"instead of what is enabled (which is everything except FILELINE",
+	"by default.)", NULL)
 
 PD(name,	STRING,	"test", str,
 	0,	0,
-	"String used mainly to test the STRING-data type until we need it.\n",
+	"String used mainly to test the STRING-data type until we need it.",
 	NULL)
 };
 
@@ -691,22 +691,20 @@ int param_set_default(enum param_id p, enum param_origin origin)
 	return param_set(p, param[p].default_d, origin);
 }
 
-/* Print information about a single parameter, or all parameter (p == -1).
+/*
+ * Print information about a single parameter, or all parameter (p == -1).
  * what defines what is printed, so it could be suitable for using in a
  * configuration file, passing to a pipe, --help, man-file or whatever
  * else.
- *
- * XXX: This is a bit extensive in length, but fairly simple, so bare with
- * 	it for now.
  */
 #define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
 void param_show(FILE * fd, enum param_id p, unsigned int what)
 {
-	char *comment[] = { "/* ", " * ", "/*", " *" };
-	int com = 0;
 	if (p == -1) {
-		for (p = 0; p < P_NUM; p++)
+		for (p = 0; p < P_NUM; p++) {
 			param_show(fd, p, what);
+			fprintf(fd, "\n");
+		}
 		return;
 	}
 	param_is_in_range(p);
@@ -714,32 +712,18 @@ void param_show(FILE * fd, enum param_id p, unsigned int what)
 		if (param[p].origin == P_STATE_DEFAULT)
 			return;
 	}
-	if (WB(COMMENT)) {
-		fprintf(fd, "\n");
-		com = 0;
-	}
 
-	if (WB(BOILER)) {
-		fprintf(fd, "%skey: %s, type:%s\n",
-			comment[com],
+	if (WB(BOILER1)) {
+		fprintf(fd, "# key: %s, type:%s\n",
 			param[p].name,
 			ptype[param[p].type].name);
-		com = 1;
 	}
 
-	if (WB(VALUE) || WB(DEFAULT) || WB(SOURCE)) {
-		fprintf(fd,"%s",comment[com+2]);
-	}
-	if (WB(VALUE)) {
-		fprintf(fd, " value: ");
+	if (WB(BOILER2)) {
+		fprintf(fd, "# value: ");
 		ptype[param[p].type].print(p, param[p].d, fd);
-	}
-
-	if (WB(DEFAULT)) {
 		fprintf(fd, " default: ");
 		ptype[param[p].type].print(p, param[p].default_d, fd);
-	}
-	if (WB(SOURCE)) {
 		fprintf(fd, " source: ");
 		switch (param[p].origin) {
 		case P_STATE_DEFAULT:
@@ -758,25 +742,19 @@ void param_show(FILE * fd, enum param_id p, unsigned int what)
 			assert("Fell through to the default-case "
 			       "while describing the parameter state.");
 		}
-	}
-	if (WB(VALUE) || WB(DEFAULT) || WB(SOURCE)) {
 		fprintf(fd,"\n");
-		com = 1;
 	}
 
 	if (WB(DESCRIPTION)) {
 		int i;
-		fprintf(fd, "%s\n",comment[com]);
-		com = 1;
 
+		fprintf(fd, "#\n");
 		for (i = 0; param[p].description[i] != NULL; i++) {
-			fprintf(fd, "%s%s", comment[com],
+			fprintf(fd, "#%s%s\n",
+				*param[p].description[i] ? " " : "",
 				param[p].description[i]);
 		}
 	}
-
-	if (WB(COMMENT))
-		fprintf(fd, " */\n");
 
 	if (WB(KEYVALUE)) {
 		fprintf(fd, "%s=", param[p].name);
