@@ -1,10 +1,16 @@
-Work-in-progress file (Almost the same as "TODO" except it's actually being
-done).
-
-Note: This file is used use to generate WIP.h based on all lines starting
-with a dash, so keep those lines C-safe (ie: no "). It turns out it serves
-as a nice way to discipline yourself in how much you aim for: If the list
-is too large, it will be annoying to run wmd, which encourages you to
-prioritize the list.
+Work-in-progress 
+(Almost the same as "TODO" except it's actually being done).
 
 - Outlines for event/action architecture
+
+
+Usage and rationale:
+	Lines starting with - are parsed int WIP.h and printed when wmd is
+	run, so keep them C-safe (no " in other words). The idea is to
+	remind devs what they(we) planned and what's actually happening
+	without opening a file. If the list gets too long, it gets annoying
+	and you are motivated to finish some items, remove some items that
+	can wait or otherwise condense the list.
+
+	It's an experiment. Let's see how it turns out :)
+
