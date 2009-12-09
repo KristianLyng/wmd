@@ -28,19 +28,13 @@
 
 /* Getopt is a bit fugly....
  *
- * note:
- * 	name, 
- * 	{0=no arg, 1=require arg, 2=optional arg with = specified*},
- *	target variable/flag,
- *	return value or value to set at the flag if present
- *
  * Thus: { "foo", 0, blatti, "hai" }, will point the blatti-variable to
  * "hai" if it's found...
  */
 static struct option long_options[] = {
-	{"help", 2, 0, 'h'},
-	{"version", 0, 0, 'V'},
-	{"param", 1, 0, 'p'},
+	{"help", optional_argument, 0, 'h'},
+	{"version", no_argument, 0, 'V'},
+	{"param", required_argument, 0, 'p'},
 	{NULL}
 };
 
@@ -163,7 +157,7 @@ int argv_init(int argc, char **argv)
 			break;
 		switch (c) {
 		case 'h':
-			argv_help(optarg);
+			argv_help(optarg ? optarg : argv[optind]);
 			exit(0);
 			break;
 		case 'V':
