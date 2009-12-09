@@ -50,33 +50,29 @@
 /* Param Definition (...).
  * Ensures it's mapped to the enum regardless of sorting.
  *
- * Using __VA_ARGS__ instead of just a large char * is to get a list of
- * lines which can then be optionally commented out in output. A bit hacky,
- * but the important bit is the readability of the PD() underneath.
+ * XXX: __VA_ARGS__ is a bit hacky to be able to prefix the output with
+ * 	(optional) comment-characters.
  */
 #define PD(name,type,def,field,min,max, ...) 	\
 	[P_ ## name] =				\
 	{ #name, PTYPE_ ## type, 0,		\
 	{ .v = NULL },				\
 	{ .field = def }, min, max , 		\
-	{ __VA_ARGS__ } },
+	{ __VA_ARGS__ , NULL } },
 
 /*  *INDENT-OFF*  */
 
 /*
- * (The above tells `indent' to not parse this section)
- *
  * Actual settings matching the param enum in param.h
  *
  * Arguments:
  * name (P_name must exist in param.h)
  * type (See param-private.h, or the list underneath)
  * default value
- * field-name in the data-struct (FIXME!)
+ * field-name in the data-struct
  * minimum value (int)
  * maximum value (int)
- * description (separate lines with commas for formatting, PD() takes care
- * 	of the nasty bits).
+ * description (separate lines with commas for formatting)
  *
  * XXX: Note that the min/max are not necessarily used, it depends on the
  * 	type of parameter.
@@ -95,14 +91,13 @@ PD(replace,	BOOL,	0,	b,
 	"",
 	"For this to work, the running window manager needs to understand",
 	"the underlying protocol.",
-	"FIXME: Clarification.", NULL
+	"FIXME: Clarification."
 	)
 
 PD(sync,	BOOL,	0,	b,
 	0,	1, 
 	"Run in synchronized X-mode.","",
-	"Easier debugging but slower, since we have to wait for X.",
-	NULL)
+	"Easier debugging but slower, since we have to wait for X.")
 
 PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	0,	UINT_MAX,
@@ -112,14 +107,13 @@ PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	"",
 	"You probably want to inverse the mask to see what is disabled",
 	"instead of what is enabled (which is everything except FILELINE",
-	"by default.)", NULL)
+	"by default.)")
 
 PD(config,	STRING,	"~/.config/wmd", str,
 	0,	0,
 	"Where the configuration file is read.",
 	"",
-	"Mainly presented so it can be overridden with -p config=<file>",
-	NULL)
+	"Mainly presented so it can be overridden with -p config=<file>")
 };
 
 #undef PD
@@ -128,8 +122,7 @@ PD(config,	STRING,	"~/.config/wmd", str,
 
 /*
  * Everything done by param.c on behalf of other modules is verified, so
- * explicitly telling param.c to verify something is redundant, thus not
- * exposed.
+ * explicitly telling param.c to verify something is redundant.
  */
 
 static param_set_func ptype_set_simple;
@@ -151,18 +144,16 @@ static param_parse_func ptype_parse_key;
 /*
  * Different param-types we support.
  *
- * The "family" concept is introduced to simplify what parameter types can
- * be handled by the same set of function(s).
+ * A "family" shares a common set of functions, but the individual
+ * functions may distinguish between data types.
  *
  * set should free old values and allocate resources as needed. The
  *
- * print should print just the value specified, the data is an argument so
- * both default_d and d can be printed.
+ * print should print just the value specified
  *
  * verify should sanity check that the data is within the expected
  * confines. It can safely ignore min/max where relevant, but should verify
- * that the min/max isn't set if it is ignored (since that will give the
- * false impression that verify takes it into account).
+ * that the min/max isn't set if it is ignored
  *
  * parse should be able to back out. Avoid assert() based on user input -
  * encourage it based on stupid code (ie: NULL-data).
@@ -191,7 +182,7 @@ static struct param_type ptype[PTYPE_NUM] = {
  ***************************************************************/
 
 /*
- * Checks the range of p. Should never fail.
+ * XXX: Should never fail.
  */
 static inline void param_is_in_range(enum param_id p)
 {

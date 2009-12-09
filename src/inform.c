@@ -20,7 +20,7 @@
  *
  * The communication interface should be able to send information to a
  * generic file descriptor. At the moment, we're not quite there, but for
- * the purpose of using inform(), com.c is feature-complete enough.
+ * the purpose of using inform(), inform.c is feature-complete enough.
  */
 #include <stdio.h>
 #include <stdarg.h>
@@ -36,12 +36,12 @@
  * position and enum. This is to ensure that we can verify the integrity of
  * the structure easily.
  */
-typedef struct _t_verbosity {
+struct verbosity {
 	const unsigned int position;
 	const unsigned int bit;
 	const char *name;
 	const char *desc;
-} t_verbosity;
+};
 
 /* fd of where to send information, typically stderr or some other funny
  * information channel.
@@ -56,7 +56,7 @@ static FILE *i_output = NULL;
  * included as it's only needed internally. (V() and AV() both add it as
  * needed) 
  */
-t_verbosity verbosity[VER_NUM] = {
+struct verbosity verbosity[VER_NUM] = {
 	AV(XIGNORED,
 	   "Ignored X errors/warnings"),
 	AV(XHANDLED,
@@ -212,9 +212,6 @@ void inform_init(FILE * fd)
 	}
 }
 
-/* Describe the verbosity level defined by p on fd. If p is -1, describe
- * all of them.
- */
 void inform_describe_verbosity(FILE * fd, const int p)
 {
 	int i;

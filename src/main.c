@@ -24,11 +24,9 @@
 
 core wmd;
 
-/* Essentially a controlled reset of wmd (the structure) and all
- * parameters. Note that this will mess things up if you run it twice, as
- * you'll do funny things like reset the dpy regardless of whether you were
- * connected or not (as we can't trust state, we can't tell if we're
- * connected or not).
+/*
+ * Only run this once, or mountain trolls may carry you off to the
+ * wilderness.
  */
 static void set_defaults(void)
 {
@@ -37,8 +35,7 @@ static void set_defaults(void)
 	assert(param_set_default(P_ALL, P_STATE_DEFAULT));
 }
 
-/* Connect to the X display, check if it worked and update state. 
- *
+/*
  * XXX: Should verify XSynchronize
  */
 static void x_connect(void)
@@ -55,11 +52,8 @@ static void x_connect(void)
 	set_state(CONNECTED);
 }
 
-/* List the work in progress. This means that anything generated into the
- * WIP.h WIP_list will be printed if NOTIMPLEMENTED is set (it is by
- * default), which serves as a nice reminder to keep it up to date and
- * tells everyone what's happening "right now". In theory. No idea if this
- * is a good thing in the long run, but time will tell.
+/*
+ * See WIP for rationale.
  */
 static void wip(void)
 {
@@ -68,7 +62,9 @@ static void wip(void)
 		inform(V(NOTIMPLEMENTED), "%s", WIP_list[i]);
 }
 
-/* Let's keep it simple; ten-ish lines max. */
+/*
+ * Let's keep it simple.
+ */
 int main(int argc, char **argv)
 {
 	set_defaults();

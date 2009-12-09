@@ -29,7 +29,7 @@
 /* Getopt is a bit fugly....
  *
  * Thus: { "foo", 0, blatti, "hai" }, will point the blatti-variable to
- * "hai" if it's found...
+ * "hai" if --foo is found...
  */
 static struct option long_options[] = {
 	{"help", optional_argument, 0, 'h'},
@@ -39,7 +39,7 @@ static struct option long_options[] = {
 };
 
 /*
- * Getopt() again. : == requires an argument. :: == optional 
+ * getopt() again. : == requires an argument. :: == optional 
  */
 static char *short_options = "h::Vp:";
 
@@ -103,7 +103,7 @@ static void argv_help(char *arg)
 "# wmd is configured by setting parameters.\n"
 "#\n"
 "# Parameters can be set in a configuration file or read on the\n"
-"# command line.\n"
+"# command line. Command line takes priority over a configuration file.\n"
 "#\n"
 "# To explicitly set the value of a parameter to it's default, use:\n"
 "#   sync=default\n"
