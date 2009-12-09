@@ -50,13 +50,17 @@ union param_data {
 
 /*
  * List of parameter IDs used to fetch/set/parse/reset a parameter.
+ *
+ * P_ALL is used to tell the relevant function (if it supports it) to parse
+ * all options.
  */
 enum param_id {
 	P_replace = 0,
 	P_sync,
 	P_verbosity,
 	P_name,
-	P_NUM
+	P_NUM,
+	P_ALL
 };
 
 typedef enum _p_what_enum {

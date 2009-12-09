@@ -676,7 +676,7 @@ int param_parse(char *str, enum param_origin origin)
 int param_set_default(enum param_id p, enum param_origin origin)
 {
 	int ret = 0;
-	if (p == -1) {
+	if (p == P_ALL) {
 		if (STATE_IS(CONFIGURED))
 			inform(V(CONFIG),
 			       "Resetting values for all parameters to default");
@@ -692,15 +692,17 @@ int param_set_default(enum param_id p, enum param_origin origin)
 }
 
 /*
- * Print information about a single parameter, or all parameter (p == -1).
+ * Print information about the specified parameter.
  * what defines what is printed, so it could be suitable for using in a
  * configuration file, passing to a pipe, --help, man-file or whatever
  * else.
+ *
+ * XXX: This macro usage is ugly. Factor out when possible.
  */
 #define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
 void param_show(FILE * fd, enum param_id p, unsigned int what)
 {
-	if (p == -1) {
+	if (p == P_ALL) {
 		for (p = 0; p < P_NUM; p++) {
 			param_show(fd, p, what);
 			fprintf(fd, "\n");

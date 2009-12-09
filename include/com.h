@@ -31,6 +31,8 @@ void inform_real(const unsigned int v,
 /* The types of verbosity available. The description is kept in com.c. This
  * should be reasonably opaque to the callers. Keep in mind that order
  * matters (verified by asserts).
+ *
+ * VER_ALL == all verbosities. Not used for bitmasks, just matching.
  */
 typedef enum _t_verbosity_enum {
 	VER_XIGNORED = 0,
@@ -42,7 +44,8 @@ typedef enum _t_verbosity_enum {
 	VER_FILELINE,
 	VER_FUNCTION,
 	VER_CORE,
-	VER_NUM
+	VER_NUM,
+	VER_ALL
 } t_verbosity_enum;
 
 /* Verify that inform() is ready and sanity-check the verbosity levels.

@@ -124,14 +124,14 @@ static void argv_help(char *arg)
 "# If the same value is supplied multiple times, the last one is used\n"
 "#\n\n");
 /* *INDENT-ON* */
-		param_show(stdout, -1, UINT_MAX);
+		param_show(stdout, P_ALL, UINT_MAX);
 	} else if (!strcmp(arg, "paramlist")) {
-		param_show(stdout, -1,
+		param_show(stdout, P_ALL,
 			   P_WHAT_BIT(KEYVALUE) |
 			   P_WHAT_BIT(STATE_DEFAULTS));
 
 	} else if (!strcmp(arg, "verbosity")) {
-		inform_describe_verbosity(stdout, -1);
+		inform_describe_verbosity(stdout, VER_ALL);
 	} else if (*arg == '\0') {
 		argv_generic_help(stdout);
 	} else {

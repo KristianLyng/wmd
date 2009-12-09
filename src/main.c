@@ -34,7 +34,7 @@ static void set_defaults(void)
 {
 	wmd.state = 0;
 	wmd.x.dpy = NULL;
-	assert(param_set_default(-1, P_STATE_DEFAULT));
+	assert(param_set_default(P_ALL, P_STATE_DEFAULT));
 	set_state(CONFIGURED);
 }
 

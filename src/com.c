@@ -220,7 +220,7 @@ void inform_describe_verbosity(FILE * fd, const int p)
 {
 	int i;
 
-	if (p == -1) {
+	if (p == VER_ALL) {
 		for (i = 0; i < VER_NUM; i++)
 			inform_describe_verbosity(fd, i);
 		return;
