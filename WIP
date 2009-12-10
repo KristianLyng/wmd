@@ -1,6 +1,7 @@
 Work-in-progress 
 (Almost the same as "TODO" except it's actually being done).
 
+- Fix multiline config parsing (ie: using {})
 - Outlines for event/action architecture
 
 

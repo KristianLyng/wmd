@@ -55,7 +55,7 @@ static void x_connect(void)
 /*
  * See WIP for rationale.
  */
-static void wip(void)
+static void work_in_progress(void)
 {
 	int i;
 	for (i = 0; WIP_list[i] != NULL; i++)
@@ -67,11 +67,13 @@ static void wip(void)
  */
 int main(int argc, char **argv)
 {
+	int ret = 0;
 	set_defaults();
 	inform_init(stderr);
 	argv_init(argc, argv);
-	assert(config_init());
-	wip();
+	ret = config_init();
+	assert(ret);
+	work_in_progress();
 	x_connect();
 	return 0;
 }

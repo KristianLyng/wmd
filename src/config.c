@@ -88,8 +88,13 @@ static int config_open(void)
 	if (configfd == NULL) {
 		inform(V(CORE), "Unable to read config file `%s': %s", w[0],
 			strerror(errno));
-		inform(V(CORE), "Defaults are used instead.");
-		ret = 0;
+		if (errno == ENOENT) {
+			inform(V(CORE), "Defaults are used instead."
+				" See --help param to generate a configuration file.");
+			ret = 1;
+		} else {
+			ret = 0;
+		}
 		goto out;
 	}
 	ret = 1;
@@ -260,6 +265,12 @@ int config_init(void)
 	
 	if (!config_open())
 		return 0;
+
+	/*
+	 * config_open returns true if file was not found.
+	 */
+	if (!configfd)
+		return 1;
 	if (!config_read())
 		return 0;
 	config_close();
