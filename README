@@ -83,51 +83,45 @@ include in operating system distributions.
 4. Releases
 ===========
 
-Summary: X.Y.Z(-n): Errata for all wm-bugs and on popularly distributed
+Summary: X.Y(-n): Errata for all wm-bugs and on popularly distributed
 versions.
 
 This is a preliminary release strategy, it's subject to change without
 prior notice during the early releases. Hopefully, this will make
 involvement with wmd easier.
 
-Versions: x.y.z(-n)
+Versions: x.y(-n)
 
 X: Configuration incompatibilities and major refactoring
 Y: Minor refactoring and configuration additions.
-Z: Features and feature-bug fixes.
 N: Bug fixes.
 
-X: Major, Y: Minor, Z: Patch, -n: errata
+X: Major, Y: Minor, -n: errata
 
-After wmd is reasonably usable (somewhere around 0.5-0.9), release
-maintenance will commence: This means that we(?) will decide on versions we
-maintain with bug-fixes. Packagers are encouraged to state their wishes
-and/or intentions. Up to 3 minor-releases will be maintained with
-z-releases if necessary.
+When wmd is reasonably usable and has gained a user-base, release
+maintenance will commence. This means about 3-releases at a time that will
+be maintained with bug-fixing releases. The exact amount versions and
+duration will be clearly stated, and input from packagers is encouraged. 
 
 ALL affected versions of a major-release will have errata releases for
-window-management bugs at that point in time if even a vague hint of a
-necessity arise. So let's not have wm-bugs. An example of a wm-bug is a
-window being hidden when it shouldn't be, size-hint related bugs, etc.
+window-management bugs if even a vague hint of a necessity arise. So let's
+not have wm-bugs. An example of a wm-bug is a window being hidden when it
+shouldn't be, size-hint related bugs, etc.
 
-Packagers may call the packages whatever they want, wmd will not adjust
-version numbers to work around packaging issues if it is not human readable
-without intricate knowledge of packaging systems.
+wmd version numbers should be human readable and logical; Not adjusted to a
+packaging scheme or to have "unused" numbers that are used in the
+development tree. 
 
--n will be omitted until an actual errata is made. (ie: no 0.5.0-0, just
-0.5.0).
-
-WARNING: the z-portion is something we(?) may choose to remove, we will see
-during 0.x if it's necessary. After 0.5 is made, changing the basic
-versioning scheme is not an option.
+The errata (-n) portion of the version will be omitted for the original
+release. Ie: When released, the release will be 1.5, and if an errata is
+made, it will be 1.5-1, etc.
 
 When a branch for a major version is created, no minor-releases for the
-previous version will be accepted. When a branch for a new minor version is
-made, no patch-releases will be accepted.
+previous major-series will be made.
 
 To avoid packagers keeping a significant amount of in-house patches, errata
 releases will be made for any version that's used in a reasonably popular
-distribution if the packager wishes.
+distribution if the package maintainer wishes.
 
 5. Infrastructure
 =================
@@ -140,24 +134,26 @@ available. Documentation is never automatically generated though converting
 automatically from one format to an other (text in the source tree to html
 on web) is good.
 
-The entire software stack in the infrastructure must be free and reasonably
-easy to migrate.
+The software stack in the infrastructure should be free and reasonably easy
+to migrate.
 
 The infrastructure is as important as the rest of the project, but should
 not be overdone. The official project should (in time) provide:
 
  - A version control system, readable for all. Including web-based access
-   (view-only on web).
  - A web page
  - An issue tracker
 
 These components do not have to be tightly integrated, but all the services
-should be clearly visible. A mail list and/or IRC channel might be
-appropriate, but let's not get hasty.
+should be clearly visible.
 
 The infrastructure should follow the same basic philosophy as the main
 project. It should remain predictable, intuitive and stable over a long
 period of time.
+
+It should be noted that during the initial phase of development, the
+infrastructure is very likely to change - until a certain momentum is
+reached.
 
 6. Licensing and copyright
 ==========================
