@@ -211,12 +211,39 @@ static int config_purge_buf(struct config_buffer *buf)
 
 /*
  * Basic read of the config file. Really needs a sanity check...
+ *
+ * Markup in this context: 
+ * - If #: Mark as comment
+ * - If \n: unmark as comment
+ * - If \n and NOT longline: parse the buffer with param_parse()
+ * - If \n and longline: Add the \n to the buffer.
+ * - If {: Increase longline
+ * - If { AND longline: Add { to buffer.
+ * - If }: Decrease longline
+ * - If } and longline < 0: Fail (no matching {)
+ * - If } and longline: Add } to buffer.
+ * - If EOF AND longline: Warn of unmatched { and fail
+ * - If EOF and NOT longline: Parse buffer with param_parse() and end.
+ *
+ * Not that param.c handles actual mapping of the parameter, this is just
+ * for the configuration file. So we do not handle =, for instance here.
+ * (We  may want to add a non-= feature for things like booleans, for
+ * instance, who knows - it's not within the scope of config.c to
+ * determine the correct syntax for what a parameter is - just where the
+ * definition starts and stops).
+ *
+ * XXX: I want a more clear way to describe this process. Suggestions?
+ *
+ * XXX: This should probably be split up, the complexity is a tad too
+ * 	high for my liking. -K
  */
 static int config_read(void)
 {
 	int ret = 0;
 	int c;
 	int comment = 0;
+	int longline = 0;
+	int longwhere = 0;
 	struct config_buffer buf = { NULL, 0 };
 	config_start_buffer(&buf);
 
@@ -226,20 +253,54 @@ static int config_read(void)
 		c = fgetc(configfd);
 		switch (c) {
 		case EOF:
+			if (longline) {
+				inform(V(CONFIG), "Reached end of config "
+					"file without closing `}'. "
+					"Opening { was at line %d",
+					longwhere);
+				ret = 0;
+				goto out;
+			}
 			if (config_purge_buf(&buf))
 				ret = 1;
 			else
 				ret = 0;
 			goto out;
+		case '{':
+			if (longline)
+				config_add_buf(&buf, c);
+			else {
+				longwhere = config_line;
+			}
+			longline++;
+			break;
+		case '}':
+			longline--;
+			if (longline < 0) {
+				inform(V(CONFIG), "Found `}' without "
+					"previously matching `{' on line %d:",
+					config_line);
+				ret = 0;
+				goto out;
+			}
+			if (longline)
+				config_add_buf(&buf, c);
+			break;
+		/*
+		 * XXX: Comments are stripped for longlines too... Is this
+		 * 	wise?
+		 */
 		case '#':
-			if (!config_purge_buf(&buf)) {
+			if (!longline && !config_purge_buf(&buf)) {
 				ret = 0;
 				goto out;
 			}
 			comment = 1;
 			break;
 		case '\n':
-			if (!config_purge_buf(&buf)) {
+			if (longline)
+				config_add_buf(&buf,c);
+			else if (!config_purge_buf(&buf)) {
 				ret = 0;
 				goto out;
 			}
