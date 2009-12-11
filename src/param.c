@@ -105,9 +105,12 @@ PD(verbosity, 	MASK,	(UINT_MAX ^ ((1<<VER_FILELINE)|(1<<VER_STATE))), u,
 	"",
 	"See --help verbosity list for a list of bits and what they do.",
 	"",
-	"You probably want to inverse the mask to see what is disabled",
+	"You probably want to invert the mask to see what is disabled",
 	"instead of what is enabled (which is everything except FILELINE",
-	"by default.)")
+	"by default.)","",
+	"Cheat sheet: ",
+	" 0: Display nothing.",
+	" -1: Display everything.")
 
 PD(config,	STRING,	"~/.config/wmd", str,
 	0,	0,
