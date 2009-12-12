@@ -9,6 +9,7 @@ README for wmd - the window management daemon
 7. Co-operation
 8. Code style
 9. Initial release schedule
+10. Milestones
 
 
 1. Installation and usage
@@ -257,7 +258,8 @@ This WILL change. But this is the initial plan:
 The 0.x-series is used to evolve the basic functionality needed and "Set
 the tone". 1.x will be used to find the right way to go forward, and see if
 we can discard some broken ideas. Rudimentary multihead should evolve
-during 1.x, and be sane in 2.0.
+during 1.x, and be sane in 2.0. As the educated reader will surmise, the
+initial releases will be quite unusable. The idea is to have a clear goal.
 
 The schedule is subject^W guaranteed to change at any given time. There
 will not be errata-releases for 0.x, while patch-releases are likely.
@@ -271,3 +273,23 @@ During development, the version in the tree will be the to-be-released
 version, possibly with a -devel. Short story: -devel is not a guarantee for
 a future version.
 
+10. Milestones
+==============
+
+Summary: Development milestones will be set and tagged to clearly state
+progress and state.
+
+While releases happen frequently, milestones can happen earlier. The idea
+is to add milestones and tag the tree thereafter before it's actually ready
+for release, or before some other major work is about to begin.
+
+For the 0.1 cycle, the following milestones are set:
+
+"Non-wm basics": Basic parameter handling, configuration parsing, help
+subsystems.
+
+"XCB core": When the core XCB functionality is in place
+
+"Focus switching": SSIA - Probably redundant.
+
+"Binding configuration"
