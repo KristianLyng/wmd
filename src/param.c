@@ -554,7 +554,15 @@ static int ptype_print_string(enum param_id p, union param_data d, FILE * fd)
  ***************************************************************/
 
 /*
- * Returns true if param[p].d was set to d
+ * Returns true if param[p].d was set to d or we're not configured yet and
+ * avoided an override.
+ *
+ * XXX: -p is parsed before the config file, so without the "or ..." part
+ * 	above an option set in the configuration file that is also present
+ * 	as a -p on the command line would trigger a false return value.
+ *
+ * XXX: The return value is ambiguous at best, it might be better to find
+ * 	some other mean of indicating success.
  */
 int param_set(enum param_id p, union param_data d, enum param_origin origin)
 {
@@ -564,7 +572,9 @@ int param_set(enum param_id p, union param_data d, enum param_origin origin)
 		inform(V(CONFIG_CHANGES), "Not setting parameter %s,"
 		       " current value has higher priority",
 		       param[p].name);
-		return 0;
+		if (STATE_IS(CONFIGURED))
+			return 0;
+		return 1;
 	}
 	if (STATE_IS(CONFIGURED))
 		inform(V(CONFIG_CHANGES), "Setting value of parameter "
