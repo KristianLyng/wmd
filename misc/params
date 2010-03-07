@@ -1,0 +1,15 @@
+name:	replace
+type:	bool
+start description
+Tells wmd to attempt to replace the old window manager, if present.
+
+Otherwise, doesn't really do much.
+end description
+
+name:	test	
+type:	bool
+start description
+Tells wmd to attempt to replace the old window manager, if present.
+
+Otherwise, doesn't really do much.
+end description
