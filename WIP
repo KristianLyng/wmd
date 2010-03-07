@@ -3,7 +3,9 @@ Work-in-progress
 
 - XCB-stuff is being implemented
 - Outlines for event/action architecture
-
+- verbosity levels are not dynamic enough. Need to find a way to let each
+- module define or add it's own in an easier fashion. Shouldn't have to
+- edit two places.
 
 Usage and rationale:
 	Lines starting with - are parsed int WIP.h and printed when wmd is
