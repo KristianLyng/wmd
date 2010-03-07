@@ -19,11 +19,10 @@
 #ifndef _CORE_H
 #define _CORE_H
 
-#include <X11/Xlib.h>
 #include <limits.h>
 #include <stdio.h>
 #include <assert.h>
-
+#include <xcb/xcb.h>
 #define COPYRIGHT_STRING \
 	"Copyright (c) 2009 Kristian Lyngstol"
 #define LICENSE_STRING \
@@ -79,7 +78,8 @@
 
 /* X-only state */
 typedef struct _x {
-	Display *dpy;
+	xcb_connection_t *connection;
+	int default_screen;
 } x;
 
 /* The core structure. Max length: 10ish entries.  */

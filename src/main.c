@@ -21,6 +21,7 @@
 #include "inform.h"
 #include "core.h"
 #include "WIP.h"
+#include "x.h"
 
 core wmd;
 
@@ -31,25 +32,7 @@ core wmd;
 static void set_defaults(void)
 {
 	wmd.state = 0;
-	wmd.x.dpy = NULL;
 	assert(param_set_default(P_ALL, P_STATE_DEFAULT));
-}
-
-/*
- * XXX: Should verify XSynchronize
- */
-static void x_connect(void)
-{
-	assert(wmd.x.dpy == NULL);
-	wmd.x.dpy = XOpenDisplay(NULL);
-	assert(wmd.x.dpy);
-
-	if (P(sync).b)
-		XSynchronize(wmd.x.dpy, 1);
-	else
-		XSynchronize(wmd.x.dpy, 0);
-
-	set_state(CONNECTED);
 }
 
 /*
@@ -68,12 +51,18 @@ static void work_in_progress(void)
 int main(int argc, char **argv)
 {
 	int ret = 0;
+
 	set_defaults();
 	inform_init(stderr);
 	argv_init(argc, argv);
+
 	ret = config_init();
 	assert(ret);
+
 	work_in_progress();
-	x_connect();
-	return 0;
+
+	x_init();
+	ret = x_start();
+	inform(V(CORE), "Finished execution. x_start() returned %d", ret);
+	return ret;
 }

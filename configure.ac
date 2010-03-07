@@ -9,7 +9,7 @@ AM_CONFIG_HEADER(config.h)
 
 AM_INIT_AUTOMAKE(wmd, 0.1-devel, [-Wall -Werror foreign])
 AM_CFLAGS="-Wall -Werror"
-PKG_CHECK_MODULES([x11], [x11],,[AC_MSG_ERROR([wmd requires x11.])])
+PKG_CHECK_MODULES([xcb], [xcb],,[AC_MSG_ERROR([wmd requires xcb.])])
 
 # Checks for programs.
 AC_PROG_AWK
