@@ -55,7 +55,8 @@ int x_init(void)
 	if (P(replace).b) {
 		ret = x_replace();
 		if (!ret) {
-			inform(V(XIGNORED), "Unable to replace the old WM.");
+			inform(V(XIGNORED), "Unable to replace the old WM. "
+			       "You will have to stop it manually.");
 			return ret;
 		}
 	}
@@ -70,7 +71,7 @@ int x_init(void)
 		XSynchronize(wmd.x.dpy, 0);
 */
 	set_state(CONNECTED);
-	return ret;	
+	return ret;
 }
 
 /*
@@ -80,4 +81,3 @@ int x_start(void)
 {
 	WMD_DUMMY_RETURN(1);
 }
-
