@@ -23,8 +23,8 @@ Running: wmd --help
 If it's not in --help, it's not in wmd. If it is, then someone got drunk,
 wohoo!
 
-See WIP (Work In Progress) for day-to-day changes. It's also printed at
-start, unless you turn it off.
+See WIP (Work In Progress) for day-to-day changes. The content of WIP as it
+was upon compile-time is usually printed upon startup.
 
 The rest of this document is a README on the project as a whole, not wmd
 functionality. As stated above (and below, for that matter), that sort of
@@ -49,6 +49,8 @@ model" of free software development. Only time will tell.
 There used to be a section about "other window managers", but instead I'll
 just say this: I was inspired by Beryl, Compiz, WMii and Awesome. For
 better or worse.
+
+Initial development will be sporadic.
 
 3. Project priorities
 =====================
@@ -79,7 +81,8 @@ developers and users.
 
 The ultimate goal is a window manager that "just works" for the use cases
 that it's aimed for (terminal-heavy usage), is easy to hack on and easy to
-include in operating system distributions.
+include in operating system distributions. And a healthy and self-going
+community to go along with it.
 
 4. Releases
 ===========
@@ -100,7 +103,7 @@ N: Bug fixes.
 X: Major, Y: Minor, -n: errata
 
 When wmd is reasonably usable and has gained a user-base, release
-maintenance will commence. This means about 3-releases at a time that will
+maintenance will commence. This means about three releases at a time will
 be maintained with bug-fixing releases. The exact amount versions and
 duration will be clearly stated, and input from packagers is encouraged. 
 
@@ -178,7 +181,7 @@ must be clearly stated (and compatible).
 ===============
 
 Summary: Don't squabble over bs and let the people to whom it matter most
-decide. "Meritochracy" is a bullshit word.
+decide. "Meritocracy" is a bullshit word.
 
 Any decision that affects the appearance of the project (web-design, name,
 etc) should be decided by the most active contributors. If an obvious
@@ -266,8 +269,7 @@ will not be errata-releases for 0.x, while patch-releases are likely.
 
 Build system is autoconf/automake and family until a real need for
 something else arise. A switch of build system will require a new major
-version after 1.0. Similar goes for how fond fond we are of XCB. Hopefully,
-the way to go will become evident during 0.x.
+version after 1.0.
 
 During development, the version in the tree will be the to-be-released
 version, possibly with a -devel. Short story: -devel is not a guarantee for
