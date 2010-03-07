@@ -28,4 +28,5 @@ src/inform.o
 src/main.o
 src/param.o
 src/wmd
+src/x.o
 stamp-h1
