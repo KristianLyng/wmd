@@ -53,7 +53,8 @@ static void argv_version(FILE * fd)
 static int argv_param(char *arg)
 {
 	if (!param_parse(arg, P_STATE_ARGV)) {
-		inform(V(CORE), "Unable to parse a parameter specified "
+		inform(V(CORE),
+		       "Unable to parse a parameter specified "
 		       "on the command line.");
 		exit(1);
 	}
@@ -64,10 +65,12 @@ static void argv_usage(FILE * fd)
 {
 	fprintf(fd, "Usage: wmd [ options ... ]\n");
 	fprintf(fd, " -V, --version\n\t\tprint the version of wmd and exit.\n");
-	fprintf(fd, " -h[subject], --help=subject\n\t\t"
+	fprintf(fd,
+		" -h[subject], --help=subject\n\t\t"
 		"prints generic help, or on the subject specified and exits\n"
 		"\t\tValid subjects: param,paramlist,verbosity\n");
-	fprintf(fd, " -p key=value, --param=k=v\n\t\t"
+	fprintf(fd,
+		" -p key=value, --param=k=v\n\t\t"
 		"set the parameter key to value. Overrides configuration files.\n"
 		"\t\tMultiple -p's can be specified\n");
 	fprintf(fd, "\n");
@@ -76,8 +79,7 @@ static void argv_usage(FILE * fd)
 static void argv_generic_help(FILE * fd)
 {
 	argv_usage(fd);
-	fprintf(fd,
-		"\nIf run without any parameters, wmd cures cancer.\n");
+	fprintf(fd, "\nIf run without any parameters, wmd cures cancer.\n");
 	fprintf(fd,
 		"That being said, read the individual parts of --help"
 		" to learn more\n");
@@ -127,8 +129,7 @@ static void argv_help(char *arg)
 		param_show(stdout, P_ALL, UINT_MAX);
 	} else if (!strcmp(arg, "paramlist")) {
 		param_show(stdout, P_ALL,
-			   P_WHAT_BIT(KEYVALUE) |
-			   P_WHAT_BIT(STATE_DEFAULTS));
+			   P_WHAT_BIT(KEYVALUE) | P_WHAT_BIT(STATE_DEFAULTS));
 
 	} else if (!strcmp(arg, "verbosity")) {
 		inform_describe_verbosity(stdout, VER_ALL);

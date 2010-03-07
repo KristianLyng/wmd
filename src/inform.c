@@ -106,9 +106,7 @@ static void com_check_fd(void)
  * Note that we do not distinguish between user and developer. All
  * information should be available upon request. There is no debug().
  */
-void inform_real(const unsigned int v,
-		 const char *func,
-		 const char *file,
+void inform_real(const unsigned int v, const char *func, const char *file,
 		 const unsigned int line, const char *fmt, ...)
 {
 	va_list ap;
@@ -160,7 +158,8 @@ static void inform_set_fd(FILE * fd)
 		return;
 
 	if (fd == NULL) {
-		inform(V(CORE), "Attempted to switch to a NULL-pointer "
+		inform(V(CORE),
+		       "Attempted to switch to a NULL-pointer "
 		       "for information messages. Ignoring it.");
 		return;
 	}
@@ -172,12 +171,12 @@ static void inform_set_fd(FILE * fd)
 	}
 	ret = ferror(fd);
 	if (ret) {
-		inform(V(CORE), "Attempted to switch file "
+		inform(V(CORE),
+		       "Attempted to switch file "
 		       "descriptor for inform() to one with errors."
 		       "Ignoring the change and using the old fd. "
 		       "ferror() returned %d, new fd:%d. "
-		       " now using: %d",
-		       ret, fileno(fd), fileno(i_output));
+		       " now using: %d", ret, fileno(fd), fileno(i_output));
 		if (fileno(fd) == -1)
 			inform(V(CORE), "New fd is -1. Errno is: %d (%s)",
 			       errno, strerror(errno));
@@ -185,7 +184,7 @@ static void inform_set_fd(FILE * fd)
 		i_output = fd;
 		if (STATE_IS(CONFIGURED))
 			inform(V(CORE),
-					"Switched to new file descriptor for logging.");
+			       "Switched to new file descriptor for logging.");
 	}
 }
 
@@ -223,8 +222,7 @@ void inform_describe_verbosity(FILE * fd, const int p)
 	}
 	inform_verify_verbosity(p);
 
-	fprintf(fd, "0x%X\t1<<%d\t\t%s\n",
-		verbosity[p].bit,
+	fprintf(fd, "0x%X\t1<<%d\t\t%s\n", verbosity[p].bit,
 		verbosity[p].position, verbosity[p].name);
 	fprintf(fd, "%s\n\n", verbosity[p].desc);
 	return;

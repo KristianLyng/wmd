@@ -55,7 +55,8 @@ int x_init(void)
 	if (P(replace).b) {
 		ret = x_replace();
 		if (!ret) {
-			inform(V(XIGNORED), "Unable to replace the old WM. "
+			inform(V(XIGNORED),
+			       "Unable to replace the old WM. "
 			       "You will have to stop it manually.");
 			return ret;
 		}

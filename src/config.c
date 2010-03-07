@@ -70,9 +70,10 @@ static int config_open(void)
 	d = P(config);
 	assert(d.str);
 	if (*d.str == '\0') {
-		inform(V(CONFIG), "Configuration file is blank. "
-			" Resetting it to default. Use /dev/null for "
-			"a blank configuration.");
+		inform(V(CONFIG),
+		       "Configuration file is blank. "
+		       " Resetting it to default. Use /dev/null for "
+		       "a blank configuration.");
 		param_set_default(P_config, P_STATE_DEFAULT);
 		d = P(config);
 		assert(d.str);
@@ -84,13 +85,14 @@ static int config_open(void)
 	assert(p.we_wordc == 1);
 	inform(V(CONFIG), "Configuration file: %s", w[0]);
 	configfd = fopen(w[0], "r");
-	
+
 	if (configfd == NULL) {
-		inform(V(CORE), "Unable to read config file `%s': %s", w[0],
-			strerror(errno));
+		inform(V(CORE), "Unable to read config file `%s': %s",
+		       w[0], strerror(errno));
 		if (errno == ENOENT) {
-			inform(V(CORE), "Defaults are used instead."
-				" See --help param to generate a configuration file.");
+			inform(V(CORE),
+			       "Defaults are used instead."
+			       " See --help param to generate a configuration file.");
 			ret = 1;
 		} else {
 			ret = 0;
@@ -99,7 +101,7 @@ static int config_open(void)
 	}
 	ret = 1;
 	config_line = 1;
-out:
+ out:
 	wordfree(&p);
 	return ret;
 }
@@ -114,7 +116,7 @@ static void config_close(void)
 
 	assert(configfd);
 	freturn = fclose(configfd);
-	assert(freturn == 0);	
+	assert(freturn == 0);
 }
 
 /*********************************************************************
@@ -178,7 +180,7 @@ static void config_expand_buf(struct config_buffer *buf)
  */
 static void config_add_buf(struct config_buffer *buf, int c)
 {
-	char ch = (unsigned char) c;
+	char ch = (unsigned char)c;
 	assert(c != EOF);
 	assert(buf);
 	assert(buf->buf);
@@ -199,15 +201,15 @@ static int config_purge_buf(struct config_buffer *buf)
 		return 1;
 
 	config_add_buf(buf, '\0');
-	if(!param_parse(buf->buf, P_STATE_CONFIG)) {
-		inform(V(CORE), "Failed to parse the configuration file "
-			"at line %d: %s", config_line, buf->buf);
+	if (!param_parse(buf->buf, P_STATE_CONFIG)) {
+		inform(V(CORE),
+		       "Failed to parse the configuration file "
+		       "at line %d: %s", config_line, buf->buf);
 		return 0;
 	}
 	buf->pos = 0;
 	return 1;
 }
-
 
 /*
  * Basic read of the config file. Really needs a sanity check...
@@ -254,10 +256,10 @@ static int config_read(void)
 		switch (c) {
 		case EOF:
 			if (longline) {
-				inform(V(CONFIG), "Reached end of config "
-					"file without closing `}'. "
-					"Opening { was at line %d",
-					longwhere);
+				inform(V(CONFIG),
+				       "Reached end of config "
+				       "file without closing `}'. "
+				       "Opening { was at line %d", longwhere);
 				ret = 0;
 				goto out;
 			}
@@ -277,19 +279,20 @@ static int config_read(void)
 		case '}':
 			longline--;
 			if (longline < 0) {
-				inform(V(CONFIG), "Found `}' without "
-					"previously matching `{' on line %d:",
-					config_line);
+				inform(V(CONFIG),
+				       "Found `}' without "
+				       "previously matching `{' on line %d:",
+				       config_line);
 				ret = 0;
 				goto out;
 			}
 			if (longline)
 				config_add_buf(&buf, c);
 			break;
-		/*
-		 * XXX: Comments are stripped for longlines too... Is this
-		 * 	wise?
-		 */
+			/*
+			 * XXX: Comments are stripped for longlines too... Is this
+			 *      wise?
+			 */
 		case '#':
 			if (!longline && !config_purge_buf(&buf)) {
 				ret = 0;
@@ -299,7 +302,7 @@ static int config_read(void)
 			break;
 		case '\n':
 			if (longline)
-				config_add_buf(&buf,c);
+				config_add_buf(&buf, c);
 			else if (!config_purge_buf(&buf)) {
 				ret = 0;
 				goto out;
@@ -313,7 +316,7 @@ static int config_read(void)
 			break;
 		}
 	} while (c != EOF);
-out:	
+ out:
 	config_stop_buffer(&buf);
 	return ret;
 }
@@ -323,7 +326,7 @@ int config_init(void)
 
 	if (STATE_IS(CONFIGURED))
 		set_state(RECONFIGURE);
-	
+
 	if (!config_open())
 		return 0;
 

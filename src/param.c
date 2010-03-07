@@ -203,14 +203,15 @@ static int param_verify_data(enum param_id p, const union param_data d)
 	enum param_type_id t;
 
 	param_is_in_range(p);
-	t = param[p].type;	
+	t = param[p].type;
 	assert(&ptype[t] != NULL);
 	assert(ptype[t].verify);
 
 	if (ptype[t].verify(t, param[p].min, param[p].max, d)) {
 		return 1;
 	} else {
-		inform(V(CONFIG), "Parameter-verification failed for "
+		inform(V(CONFIG),
+		       "Parameter-verification failed for "
 		       "%s of type %s", param[p].name, ptype[t].name);
 		return 0;
 	}
@@ -260,8 +261,8 @@ static int param_search_key(char *key)
  * INT, UINT, BOOL, MASK
  */
 static int ptype_verify_simple(const enum param_type_id type,
-			       const int min,
-			       const int max, const union param_data data)
+			       const int min, const int max,
+			       const union param_data data)
 {
 	assert(PTYPE_IS_INT(type));
 
@@ -292,8 +293,8 @@ static int ptype_verify_simple(const enum param_type_id type,
  * Returns 0 for invalid string or the length of the string + 1
  */
 static int ptype_verify_string(const enum param_type_id type,
-			       const int min,
-			       const int max, const union param_data data)
+			       const int min, const int max,
+			       const union param_data data)
 {
 	int i;
 
@@ -311,8 +312,7 @@ static int ptype_verify_string(const enum param_type_id type,
 	return 0;
 }
 
-static int ptype_verify_key(const enum param_type_id type,
-			    const int min,
+static int ptype_verify_key(const enum param_type_id type, const int min,
 			    const int max, const union param_data data)
 {
 	WMD_DUMMY_RETURN(0);
@@ -401,7 +401,8 @@ static int ptype_set_key(enum param_id p, union param_data data)
  * XXX: This is a bit messy, and might benefit from being split up, since
  * 	it handles both bool and int/uint/mask.
  */
-static int ptype_parse_simple(enum param_id p, char *orig, enum param_origin origin)
+static int ptype_parse_simple(enum param_id p, char *orig,
+			      enum param_origin origin)
 {
 	union param_data d;
 	int i, ret = 0;
@@ -418,9 +419,9 @@ static int ptype_parse_simple(enum param_id p, char *orig, enum param_origin ori
 	i = strlen(str);
 
 	if (i == 0) {
-		inform(V(CONFIG), "String size for simple parameter is 0,"
-		       " did you mean 'default'? Param: %s.",
-		       param[p].name);
+		inform(V(CONFIG),
+		       "String size for simple parameter is 0,"
+		       " did you mean 'default'? Param: %s.", param[p].name);
 		ret = 1;
 		goto out;
 	}
@@ -438,7 +439,8 @@ static int ptype_parse_simple(enum param_id p, char *orig, enum param_origin ori
 		else if (!strcasecmp(str, "1"))
 			d.b = 1;
 		if (d.b == 2) {
-			inform(V(CONFIG), "Invalid boolean value for "
+			inform(V(CONFIG),
+			       "Invalid boolean value for "
 			       "'%s' (value: %s)", param[p].name, str);
 			ret = 2;
 			goto out;
@@ -448,9 +450,9 @@ static int ptype_parse_simple(enum param_id p, char *orig, enum param_origin ori
 		 */
 		ret = param_set(p, d, origin);
 		goto out;
-	} else if (param[p].type == PTYPE_MASK ||
-		   param[p].type == PTYPE_UINT ||
-		   param[p].type == PTYPE_INT) {
+	} else if (param[p].type == PTYPE_MASK
+		   || param[p].type == PTYPE_UINT
+		   || param[p].type == PTYPE_INT) {
 		union param_data d;
 		char *end;
 		long int l;
@@ -477,7 +479,7 @@ static int ptype_parse_simple(enum param_id p, char *orig, enum param_origin ori
 		ret = param_set(p, d, origin);
 		goto out;
 	}
-out:
+ out:
 	free(full);
 	return ret;
 }
@@ -489,7 +491,8 @@ out:
  * 	circumvent whitespace stripping. Probably. Maybe. I dunno, leave me
  * 	alone.
  */
-static int ptype_parse_string(enum param_id p, char *str, enum param_origin origin)
+static int ptype_parse_string(enum param_id p, char *str,
+			      enum param_origin origin)
 {
 	union param_data d;
 
@@ -500,7 +503,7 @@ static int ptype_parse_string(enum param_id p, char *str, enum param_origin orig
 	return param_set(p, d, origin);
 }
 
-static int ptype_parse_key(enum param_id  p, char *str, enum param_origin origin)
+static int ptype_parse_key(enum param_id p, char *str, enum param_origin origin)
 {
 	WMD_DUMMY_RETURN(0);
 }
@@ -531,7 +534,8 @@ static int ptype_print_simple(enum param_id p, union param_data d, FILE * fd)
 		assert("Reached default-case when it should be "
 		       "impossible. Is PTYPE_IS_INT() in sync?"
 		       "(And yeah, this is an assert)");
-		inform(V(CORE), "The impossible happened! Abandon"
+		inform(V(CORE),
+		       "The impossible happened! Abandon"
 		       " ship! (printing a simple parameter that"
 		       " is apparently not an integer, unsigned "
 		       "integer, bitmask or boolean. Now what...");
@@ -569,16 +573,16 @@ int param_set(enum param_id p, union param_data d, enum param_origin origin)
 	int ret;
 	param_is_in_range(p);
 	if (origin < param[p].origin) {
-		inform(V(CONFIG_CHANGES), "Not setting parameter %s,"
-		       " current value has higher priority",
-		       param[p].name);
+		inform(V(CONFIG_CHANGES),
+		       "Not setting parameter %s,"
+		       " current value has higher priority", param[p].name);
 		if (STATE_IS(CONFIGURED))
 			return 0;
 		return 1;
 	}
 	if (STATE_IS(CONFIGURED))
-		inform(V(CONFIG_CHANGES), "Setting value of parameter "
-		       "\"%s\"", param[p].name);
+		inform(V(CONFIG_CHANGES),
+		       "Setting value of parameter " "\"%s\"", param[p].name);
 	ret = ptype[param[p].type].set(p, d);
 	if (ret)
 		assert(param_verify(p));
@@ -620,8 +624,8 @@ int param_parse(char *str, enum param_origin origin)
 
 	sep = index(str, '=');
 	if (sep == NULL) {
-		inform(V(CONFIG), "Missing '=' in parameter "
-		       "key-value pair: %s", str);
+		inform(V(CONFIG),
+		       "Missing '=' in parameter " "key-value pair: %s", str);
 		return 0;
 	}
 	length = sep - str;
@@ -692,8 +696,9 @@ int param_set_default(enum param_id p, enum param_origin origin)
 	}
 
 	if (STATE_IS(CONFIGURED))
-		inform(V(CONFIG_CHANGES), "Resetting value of parameter "
-		       "\"%s\" to default", param[p].name);
+		inform(V(CONFIG_CHANGES),
+		       "Resetting value of parameter " "\"%s\" to default",
+		       param[p].name);
 	return param_set(p, param[p].default_d, origin);
 }
 
@@ -722,8 +727,7 @@ void param_show(FILE * fd, enum param_id p, unsigned int what)
 	}
 
 	if (WB(BOILER1)) {
-		fprintf(fd, "# key: %s, type:%s\n",
-			param[p].name,
+		fprintf(fd, "# key: %s, type:%s\n", param[p].name,
 			ptype[param[p].type].name);
 	}
 
@@ -750,7 +754,7 @@ void param_show(FILE * fd, enum param_id p, unsigned int what)
 			assert("Fell through to the default-case "
 			       "while describing the parameter state.");
 		}
-		fprintf(fd,"\n");
+		fprintf(fd, "\n");
 	}
 
 	if (WB(DESCRIPTION)) {
