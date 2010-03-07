@@ -37,6 +37,7 @@ void inform_real(const unsigned int v,
 typedef enum _t_verbosity_enum {
 	VER_XIGNORED = 0,
 	VER_XHANDLED,
+	VER_XCRIT,
 	VER_CONFIG_CHANGES,
 	VER_CONFIG,
 	VER_STATE,

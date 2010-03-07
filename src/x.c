@@ -41,6 +41,20 @@ static void x_reset_core(void)
 }
 
 /*
+ * Verify that everything is OK with our X connection
+ */
+static int x_check_errors(void)
+{
+	int ret;
+	ret = xcb_connection_has_error(wmd.x.connection);
+	if (ret) {
+		inform(V(XCRIT), "Server has nasty errors.");
+		return 0;
+	}
+	return 1;
+}
+
+/*
  * Initializes the X connection
  *
  * If an existing WM is running - kindly ask it to go away if replace is
@@ -55,7 +69,7 @@ int x_init(void)
 	if (P(replace).b) {
 		ret = x_replace();
 		if (!ret) {
-			inform(V(XIGNORED),
+			inform(V(XCRIT),
 			       "Unable to replace the old WM. "
 			       "You will have to stop it manually.");
 			return ret;
@@ -65,6 +79,8 @@ int x_init(void)
 	assert(wmd.x.connection == NULL);
 	wmd.x.connection = xcb_connect(NULL, &wmd.x.default_screen);
 	assert(wmd.x.connection);
+	ret = x_check_errors();
+	assert(ret);
 /*
 	if (P(sync).b)
 		XSynchronize(wmd.x.dpy, 1);

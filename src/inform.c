@@ -61,6 +61,8 @@ struct verbosity verbosity[VER_NUM] = {
 	   "Ignored X errors/warnings"),
 	AV(XHANDLED,
 	   "X errors that have been dealt with"),
+	AV(XCRIT,
+	   "Critical X errors"),
 	AV(CONFIG_CHANGES,
 	   "Changes to the configuration"),
 	AV(CONFIG,
