@@ -14,6 +14,10 @@ PKG_CHECK_MODULES([xcb], [xcb],,[AC_MSG_ERROR([wmd requires xcb.])])
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
+AC_CHECK_PROGS(TCLSH, [tclsh tclsh8.4 tclsh8.5], :)
+if test "$TCLSH" = :; then
+	TCLSH="${am_missing_run}tclsh"
+fi
 
 # Checks for libraries.
 

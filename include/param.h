@@ -26,15 +26,7 @@
  */
 #define	WMD_MAX_STRING 1024
 
-enum param_type_id {
-	PTYPE_BOOL = 0,
-	PTYPE_UINT,
-	PTYPE_INT,
-	PTYPE_MASK,
-	PTYPE_STRING,
-	PTYPE_KEY,
-	PTYPE_NUM
-};
+#include "param-list.h"
 
 /* Container for data types available for params, passed to various
  * helper-functions.
@@ -46,21 +38,6 @@ union param_data {
 	int i;
 	unsigned int u;
 	int b;
-};
-
-/*
- * List of parameter IDs used to fetch/set/parse/reset a parameter.
- *
- * P_ALL is used to tell the relevant function (if it supports it) to parse
- * all options.
- */
-enum param_id {
-	P_replace = 0,
-	P_sync,
-	P_verbosity,
-	P_config,
-	P_NUM,
-	P_ALL
 };
 
 typedef enum _p_what_enum {
