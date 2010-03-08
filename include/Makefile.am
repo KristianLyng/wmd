@@ -6,14 +6,14 @@ WIP.h: $(top_srcdir)/WIP Makefile
 
 
 param-list.c: $(top_srcdir)/src/generate_structs.tcl
-	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl || true
+	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
 
 param-list.h: $(top_srcdir)/src/generate_structs.tcl
-	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl || true
+	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
 
 verbosities.c: $(top_srcdir)/src/generate_structs.tcl
-	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl || true
+	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
 
 verbosities.h: $(top_srcdir)/src/generate_structs.tcl
-	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl || true
+	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
 	

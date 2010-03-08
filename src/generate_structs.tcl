@@ -17,9 +17,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Generates various .h and .c files for parameters. One place to edit
-# instead of two.
+# instead of two (four).
+#
+# Handles: verbosities.{c,h} param-list.{c,h}
 
-# Used to generate the param_type_id enum
+# Used to generate the param_type_id enum: available parameter types.
 set types {bool uint int mask string key}
 
 # Parameters.
@@ -41,15 +43,20 @@ set params {
 	{sync		BOOL	false {
 		"Run in synchronized X-mode."
 		""
-		"Easier to tebug, but slower since we have to wait for X"
+		"Easier to debug, but slower since we have to wait for X"
 	}}
 	{verbosity	MASK
 	 {(UINT_MAX ^ ((1<<VER_FILELINE|(1<<VER_STATE))))} {
-		"Bitmask deciding how verbose wmd should be"
+		"Bit-mask deciding how verbose wmd should be"
 		""
-		"See --help verbosity for a list of possibilites"
+		"See --help verbosity for a list of possibilities"
 		""
 		"Cheat sheet: 0: display nothing. -1: Display everything"
+	}}
+	{testint	INT	5	-5	15 {
+		"Test integer with default five and min -15"
+		""
+		"Max should be 15"
 	}}
 	{config		string	 "~/.config/wmd" {
 		"The location of the configuration files"
@@ -61,16 +68,16 @@ set params {
 # Keep in mind: changing the order changes the config-syntax.
 # IE: Don't do it. Add to the bottom.
 set verbosities {
+	{CORE		"Core information. You almost always want this."}
+	{STATE		"Changes in state: Connect/disconnect/handling"}
+	{XCRIT 		"Critical X Errors"}
 	{XIGNORED	"Ignored X errors/warnings."}
 	{XHANDLED	"X errors that was handled."}
-	{XCRIT 		"Critical X Errors"}
 	{CONFIG_CHANGES "Configuration changes"}
 	{CONFIG		"Parsing/verification of configuration"}
-	{STATE		"Changes in stateie: Connect/disconnect/handling"}
 	{NOTIMPLEMENTED "Warnings when unimplemented functions are called"}
 	{FILELINE	"Include source-file and line number in output"}
 	{FUNCTION	"Include the calling function-name in the output"}
-	{CORE		"Core information. You almost always want this."}
 }
 
 #########
@@ -178,6 +185,7 @@ foreach param $params {
 		puts $c ""
 	}
 	incr n
+	set desc [lindex $param 3]
 	if {$type == "BOOL"} {
 		set min 0
 		set max 1
@@ -201,13 +209,32 @@ foreach param $params {
 		set min 0
 		set max "UINT_MAX"
 		set bf "u"
+	} elseif {$type == "INT" || $type == "UINT" } {
+		set min [lindex $param 3]
+		set max [lindex $param 4]
+		if {$type == "INT"} {
+			set bf "i"
+		} else {
+			set bf "u"
+			if {$min < 0} {
+				puts "Parameter ${name} defined unsigned but with min<0."
+				exit 1
+			}
+		}
+		if {$def < $min || $def > $max} {
+			puts "Parameter ${name} defined with default outside of valid range."
+			exit 1
+		}
+
+		set desc [lindex $param 5]
+
 	} else {
 		puts "Unsupported param-type: ${type}."
 		exit 1
 	}
 	puts $c "PD(${name}, ${type}, ${def}, ${bf}, ${min}, ${max}, "
 	set mn 0
-	foreach com [lindex $param 3] {
+	foreach com $desc {
 		if {$mn != 0} {
 			puts $c ","
 		}

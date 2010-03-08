@@ -521,7 +521,7 @@ int param_set(enum param_id p, union param_data d, enum param_origin origin)
 	else
 		inform(V(CONFIG_CHANGES),
 		       "Failed to set value of parameter "
-		       "\"%s\". *set() returned %d", ret);
+		       "\"%s\". *set() returned %d", param[p].name, ret);
 	param[p].origin = origin;
 	return ret;
 }
