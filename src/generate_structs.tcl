@@ -16,20 +16,34 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+###
 # Generates various .h and .c files for parameters. One place to edit
 # instead of two (four).
 #
 # Handles: verbosities.{c,h} param-list.{c,h}
 
+# Parameter type families.
+set tfamilies { simple string key }
+
 # Used to generate the param_type_id enum: available parameter types.
-set types {bool uint int mask string key}
+set types {
+	{bool simple}
+	{uint simple}
+	{int simple}
+	{mask simple}
+	{string string}
+	{key key}
+	}
 
 # Parameters.
 #
 # TCL-syntax means {} and "" is roughly the same. The indentation is a bit
 # funky here to avoid sliding the descriptions too far to the right.
 #
-# XXX: Need an integer-demo too, and support for uint, int and key.
+# format is {name type default <min max> {description}}
+# min/max is only valid for types where it makes sense, and otherwise
+# invalid. In other words: integers.
+
 set params {
 	{replace	BOOL	true {
 		"If set to true, wmd will attempt to replace the running"
@@ -54,12 +68,14 @@ set params {
 		"Cheat sheet: 0: display nothing. -1: Display everything"
 	}}
 	{testint	INT	5	-5	15 {
-		"Test integer with default five and min -15"
+		"Test integer with default five and min -5"
 		""
 		"Max should be 15"
 	}}
 	{config		string	 "~/.config/wmd" {
-		"The location of the configuration files"
+		"The location of the configuration file"
+		""
+		"Does nothing in a file, but can be overridden by -p"
 	}}
 }
 
@@ -80,9 +96,9 @@ set verbosities {
 	{FUNCTION	"Include the calling function-name in the output"}
 }
 
-#########
-# Actual parsing starts here. Normally no need to modify it.
-#########
+#############################################################
+# Actual parsing starts here. Normally no need to modify it.#
+#############################################################
 
 # Print the boilerplate-warning to avoid confusing people.
 proc warn {fd} {
@@ -101,7 +117,7 @@ warn $head
 set n 0
 puts $head "enum param_type_id {"
 foreach type $types {
-	puts -nonewline $head "\tPTYPE_[string toupper $type]"
+	puts -nonewline $head "\tPTYPE_[string toupper [lindex $type 0]]"
 	if {$n == 0} {
 		puts -nonewline $head " = 0"
 	}
@@ -133,6 +149,54 @@ puts $head ""
 set c [open "../include/param-list.c" w]
 warn $c
 
+puts $c "
+/*
+ * Everything done by param.c on behalf of other modules is verified, so
+ * explicitly telling param.c to verify something is redundant and thus not
+ * exposed.
+ */
+"
+foreach fam $tfamilies {
+	puts $c "static param_set_func ptype_set_${fam};"
+	puts $c "static param_print_func ptype_print_${fam};"
+	puts $c "static param_verify_func ptype_verify_${fam};"
+	puts $c "static param_parse_func ptype_parse_${fam};"
+	puts $c ""
+}
+puts $c "
+/*
+ * Different param-types we support.
+ *
+ * A \"family\" shares a common set of functions, but the individual
+ * functions may distinguish between data types.
+ *
+ * set should free old values and allocate resources as needed.
+ *
+ * print should print just the value specified
+ *
+ * verify should sanity check that the data is within the expected
+ * confines. It can safely ignore min/max where relevant, but should verify
+ * that the min/max isn't set if it is ignored
+ *
+ * parse should be able to back out. Avoid assert() based on user input -
+ * encourage it based on stupid code (ie: NULL-data).
+ */
+#define PA(name, family) 					\\
+	\[PTYPE_ ## name\] = {					\\
+		PTYPE_ ## name, #name,				\\
+		ptype_set_ ## family,				\\
+		ptype_print_ ## family, 			\\
+		ptype_verify_ ## family,			\\
+		ptype_parse_ ## family }
+
+static struct param_type ptype\[PTYPE_NUM\] = {
+"
+foreach type $types {
+	puts $c "PA([string toupper [lindex $type 0]], [lindex $type 1]),"
+}
+
+puts $c "};"
+puts $c "#undef PA"
 puts $c "
 /*
  * Ensures that the parameter is mapped to the right enum.

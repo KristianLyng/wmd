@@ -227,14 +227,14 @@ static int config_purge_buf(struct config_buffer *buf)
  * - If EOF AND longline: Warn of unmatched { and fail
  * - If EOF and NOT longline: Parse buffer with param_parse() and end.
  *
- * Not that param.c handles actual mapping of the parameter, this is just
+ * Note that param.c handles actual mapping of the parameter, this is just
  * for the configuration file. So we do not handle =, for instance here.
- * (We  may want to add a non-= feature for things like booleans, for
+ * (We may want to add a non-= feature for things like booleans, for
  * instance, who knows - it's not within the scope of config.c to
  * determine the correct syntax for what a parameter is - just where the
  * definition starts and stops).
  *
- * XXX: I want a more clear way to describe this process. Suggestions?
+ * XXX: I want a clearer way to describe this process. Suggestions?
  *
  * XXX: This should probably be split up, the complexity is a tad too
  * 	high for my liking. -K
@@ -289,10 +289,10 @@ static int config_read(void)
 			if (longline)
 				config_add_buf(&buf, c);
 			break;
-			/*
-			 * XXX: Comments are stripped for longlines too... Is this
-			 *      wise?
-			 */
+		/*
+		 * XXX: Comments are stripped for longlines too... Is this
+		 *      wise?
+		 */
 		case '#':
 			if (!longline && !config_purge_buf(&buf)) {
 				ret = 0;
@@ -323,7 +323,6 @@ static int config_read(void)
 
 int config_init(void)
 {
-
 	if (STATE_IS(CONFIGURED))
 		set_state(RECONFIGURE);
 
