@@ -30,3 +30,7 @@ src/param.o
 src/wmd
 src/x.o
 stamp-h1
+include/param-list.c
+include/param-list.h
+include/verbosities.c
+include/verbosities.h
