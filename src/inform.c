@@ -43,45 +43,12 @@ struct verbosity {
 	const char *desc;
 };
 
+#include "verbosities.c"
+
 /* fd of where to send information, typically stderr or some other funny
  * information channel.
  */
 static FILE *i_output = NULL;
-
-/* Short for "Add Verbosity" ... Or something like that. */
-#define AV(name,desc) \
-	{ VER_ ## name, 1<<VER_ ## name, #name, desc }
-
-/* Different verbosity levels, as defined in t_verbosity_enum. VER_ isn't
- * included as it's only needed internally. (V() and AV() both add it as
- * needed) 
- */
-struct verbosity verbosity[VER_NUM] = {
-	AV(XIGNORED,
-	   "Ignored X errors/warnings"),
-	AV(XHANDLED,
-	   "X errors that have been dealt with"),
-	AV(XCRIT,
-	   "Critical X errors"),
-	AV(CONFIG_CHANGES,
-	   "Changes to the configuration"),
-	AV(CONFIG,
-	   "Configuration parsing/verification"),
-	AV(STATE,
-	   "Changes in state, ie: connect/disconnect from X,\n"
-	   "event-handling/state-handling."),
-	AV(NOTIMPLEMENTED,
-	   "Attempted access to features that only have placeholders."),
-	AV(FILELINE,
-	   "Include source-file and line number in messages."),
-	AV(FUNCTION,
-	   "Include the function that sent the message in the output."),
-	AV(CORE,
-	   "Information related to the core functionality \n"
-	   "of wmd. This should almost always be set."),
-};
-
-#undef AV
 
 /* Make sure the fd is set to something besides NULL. This is mostly just a
  * hacked up init-thing.

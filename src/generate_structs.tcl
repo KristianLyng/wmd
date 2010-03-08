@@ -56,6 +56,23 @@ set params {
 	}}
 }
 
+# Levels of verbosity.
+#
+# Keep in mind: changing the order changes the config-syntax.
+# IE: Don't do it. Add to the bottom.
+set verbosities {
+	{XIGNORED	"Ignored X errors/warnings."}
+	{XHANDLED	"X errors that was handled."}
+	{XCRIT 		"Critical X Errors"}
+	{CONFIG_CHANGES "Configuration changes"}
+	{CONFIG		"Parsing/verification of configuration"}
+	{STATE		"Changes in stateie: Connect/disconnect/handling"}
+	{NOTIMPLEMENTED "Warnings when unimplemented functions are called"}
+	{FILELINE	"Include source-file and line number in output"}
+	{FUNCTION	"Include the calling function-name in the output"}
+	{CORE		"Core information. You almost always want this."}
+}
+
 #########
 # Actual parsing starts here. Normally no need to modify it.
 #########
@@ -201,3 +218,55 @@ foreach param $params {
 }
 puts $c "};"
 puts $c "#undef PD"
+
+set verc [open "../include/verbosities.c" w]
+warn $verc
+
+puts $verc "
+/* Short for \"Add Verbosity\" ... Or something like that. */
+#define AV(name,desc) \\
+	\{ VER_ ## name, 1<<VER_ ## name, #name, desc \}
+
+/* Different verbosity levels, as defined in t_verbosity_enum. VER_ isn't
+ * included as it's only needed internally. (V() and AV() both add it as
+ * needed) 
+ */
+struct verbosity verbosity\[VER_NUM\] = \{"
+
+set n 0
+
+foreach ver $verbosities {
+	if {$n != 0} {
+		puts $verc ","
+	}
+	incr n
+	puts -nonewline $verc "\tAV([lindex $ver 0], \"[lindex $ver 1]\")"
+}
+puts $verc ""
+puts $verc "};"
+puts $verc "#undef AV"
+
+
+set verh [open "../include/verbosities.h" w]
+warn $verh
+
+puts $verh "
+/* The types of verbosity available. The description is kept in com.c. This
+ * should be reasonably opaque to the callers. Keep in mind that order
+ * matters (verified by asserts).
+ *
+ * VER_ALL == all verbosities. Not used for bitmasks, just matching.
+ */
+typedef enum _t_verbosity_enum {"
+
+set n 0
+foreach ver $verbosities {
+	puts -nonewline $verh "\tVER_[lindex $ver 0]"
+	if {$n == 0} {
+		puts -nonewline $verh " = 0"
+	}
+	puts $verh ","
+	incr n
+}
+
+puts $verh "\tVER_NUM,\n\tVER_ALL\n} t_verbosity_enum;"

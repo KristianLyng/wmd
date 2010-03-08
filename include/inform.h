@@ -21,33 +21,14 @@
 
 #include <stdio.h>
 
+#include "verbosities.h"
+
 /* Send information. v is the verbosity level as described below. */
 #define inform(v, ...) inform_real(v, __func__, __FILE__, __LINE__, __VA_ARGS__)
 void inform_real(const unsigned int v,
 		 const char *func,
 		 const char *file,
 		 const unsigned int line, const char *fmt, ...);
-
-/* The types of verbosity available. The description is kept in com.c. This
- * should be reasonably opaque to the callers. Keep in mind that order
- * matters (verified by asserts).
- *
- * VER_ALL == all verbosities. Not used for bitmasks, just matching.
- */
-typedef enum _t_verbosity_enum {
-	VER_XIGNORED = 0,
-	VER_XHANDLED,
-	VER_XCRIT,
-	VER_CONFIG_CHANGES,
-	VER_CONFIG,
-	VER_STATE,
-	VER_NOTIMPLEMENTED,
-	VER_FILELINE,
-	VER_FUNCTION,
-	VER_CORE,
-	VER_NUM,
-	VER_ALL
-} t_verbosity_enum;
 
 /* Verify that inform() is ready and sanity-check the verbosity levels.
  * Also sets up a new file descriptor for log messages.
