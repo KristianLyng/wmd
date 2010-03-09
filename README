@@ -10,7 +10,8 @@ README for wmd - the window management daemon
 8. Code style
 9. Initial release schedule
 10. Milestones
-
+11. Contributing
+12. Random thoughts
 
 1. Installation and usage
 =========================
@@ -295,3 +296,54 @@ subsystems.
 "Focus switching": SSIA - Probably redundant.
 
 "Binding configuration"
+
+11. Contributing
+================
+
+Any and all contributions are welcome, though subject to moderation. The
+easiest way to contribute during the early stages is probably to try it
+out, look around at the code/ideas and tell me what you think. Even if wmd
+doesn't really function as a window manager, it's better to fix the
+fundamental misconceptions before the manifest in code.
+
+Since the core infrastructure isn't finalized yet, most of the code is
+likely to change. Still: Patches are _always_ welcome.
+
+I'm also looking for potentially long-time contributors/developers. My only
+request is that you know at least some C-coding. Other than that C is a
+small language and ideas are more important than code.
+
+12. Random thoughts
+===================
+
+To be able to be concise, I need to figure out a way to make the
+inform-code not print 5 different variations of the same nested
+error/warning. Example: setting an integer-option out of range. Though the
+backtrace-like feel is sort of nice. I guess I could add a "stack-counter"
+to inform() so the inner (original) error prints at #0, the second layer
+prints at #0+1, the next at #0+1+1 and so forth? Ie: If you know what went
+wrong, print at #0, if you inherrited the error print at #x+1?
+
+An other concern is hooks. There are less than a dousin interesting ones.
+Should be easy to deal with, though.
+
+I also want wmd to be able to operate similar ot a normal window manager
+(non-tiling) on certain work spaces. That way you can have a workspace with
+stuff like gimp or openoffice without fighting too much with the wm.
+
+And I have no qualms about making one virtual workspace for each physical
+head - if configured to.
+
+Things like tiling should always work on the concept of least possible
+movement. So when "booting up" it should try to map the windows into a grid
+similar to how they were to begin with. And if you do things like run
+nvidia-manager to resize your screen, windows should remain were they were
+as much as possible.
+
+As far as layout-engines go, they should essentially be hooks too. And not
+use global data structures, as they need to be able to seamlessly switch.
+They should also be "re-entrant". Each window should be owned by a work
+space, which in turn should have _one_ layout engine. This should make
+windows stretching multiple physical screens reasonably easy to deal with.
+
+
