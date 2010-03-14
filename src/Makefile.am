@@ -5,12 +5,6 @@ bin_PROGRAMS = wmd
 wmd_SOURCES = main.c param.c inform.c arg.c config.c x.c
 wmd_LDADD = $(xcb_LIBS)
 
-generate: generate_structs.tcl
-	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
-
-main.c: generate
-
-${top_srcdir}/include/param.h: generate_structs.tcl
 
 ${top_srcdir}/include/param-list.c: generate_structs.tcl
 	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
@@ -18,10 +12,10 @@ ${top_srcdir}/include/param-list.c: generate_structs.tcl
 ${top_srcdir}/include/param-list.h: generate_structs.tcl
 	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
 
-${top_srcdir}/include/verbosities.c:generate_structs.tcl
+${top_srcdir}/include/verbosities.c: generate_structs.tcl
 	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
 
 ${top_srcdir}/include/verbosities.h: generate_structs.tcl
 	cd $(top_srcdir)/src/ && @TCLSH@ generate_structs.tcl
 
-.PHONY: generate	
+main.c: ${top_srcdir}/include/param-list.c
