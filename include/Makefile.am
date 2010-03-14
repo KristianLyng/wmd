@@ -1,4 +1,4 @@
-nobase_noinst_HEADERS = core.h param.h param-private.h inform.h WIP.h x.h verbosities.c param-list.c param-list.c verbosities.h
+nobase_noinst_HEADERS = core.h param.h param-private.h inform.h WIP.h x.h
 CLEANFILES = WIP.h verbosities.c verbosities.h param-list.c param-list.h
 WIP.h: $(top_srcdir)/WIP Makefile
 	echo "/* Generated from $(top_srcdir)/WIP at build time */" >$@
