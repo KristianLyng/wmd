@@ -105,7 +105,7 @@ proc warn {fd} {
 	puts $fd "/*"
 	puts $fd " * Automatically generated from gen_objects.tcl."
 	puts $fd " *"
-	puts $fd " * Do not modify. Modify gen_objects.tcl instead"
+	puts $fd " * Do not modify. Modify src/generate_structs.tcl instead"
 	puts $fd " */"
 	puts $fd ""
 }
