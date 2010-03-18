@@ -66,7 +66,7 @@ int x_init(void)
 {
 	int ret = 0;
 	x_reset_core();
-	if (P(replace).b) {
+	if (P_replace()) {
 		ret = x_replace();
 		if (!ret) {
 			inform(V(XCRIT),

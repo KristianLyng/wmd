@@ -68,7 +68,7 @@
 static inline void param_is_in_range(enum param_id p)
 {
 	assert(p >= 0);
-	assert(p < P_NUM);
+	assert(p < PARAM_NUM);
 	assert(param[p].type >= 0);
 	assert(param[p].type < PTYPE_NUM);
 }
@@ -123,7 +123,7 @@ static int param_search_key(char *key)
 	int i;
 	assert(key);
 
-	for (i = 0; i < P_NUM; i++) {
+	for (i = 0; i < PARAM_NUM; i++) {
 		if (!strcasecmp(param[i].name, key)) {
 			return i;
 		}
@@ -564,11 +564,11 @@ int param_parse(char *str, enum param_origin origin)
 int param_set_default(enum param_id p, enum param_origin origin)
 {
 	int ret = 0;
-	if (p == P_ALL) {
+	if (p == PARAM_ALL) {
 		if (STATE_IS(CONFIGURED))
 			inform(V(CONFIG),
 			       "Resetting values for all parameters to default");
-		for (p = 0; p < P_NUM; p++)
+		for (p = 0; p < PARAM_NUM; p++)
 			ret += !param_set(p, param[p].default_d, origin);
 		return !ret;
 	}
@@ -591,8 +591,8 @@ int param_set_default(enum param_id p, enum param_origin origin)
 #define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
 void param_show(FILE * fd, enum param_id p, unsigned int what)
 {
-	if (p == P_ALL) {
-		for (p = 0; p < P_NUM; p++) {
+	if (p == PARAM_ALL) {
+		for (p = 0; p < PARAM_NUM; p++) {
 			param_show(fd, p, what);
 			fprintf(fd, "\n");
 		}

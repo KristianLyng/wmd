@@ -61,26 +61,26 @@ struct config_buffer {
  */
 static int config_open(void)
 {
-	union param_data d;
+	char *d;
 	wordexp_t p;
 	char **w;
 	int ret = 0;
 
 	assert(configfd == NULL);
-	d = P(config);
-	assert(d.str);
-	if (*d.str == '\0') {
+	d = P_config();
+	assert(d);
+	if (*d == '\0') {
 		inform(V(CONFIG),
 		       "Configuration file is blank. "
 		       " Resetting it to default. Use /dev/null for "
 		       "a blank configuration.");
-		param_set_default(P_config, P_STATE_DEFAULT);
-		d = P(config);
-		assert(d.str);
-		assert(*d.str != '\0');
+		param_set_default(PARAM_config, P_STATE_DEFAULT);
+		d = P_config();
+		assert(d);
+		assert(*d != '\0');
 	}
 
-	wordexp(d.str, &p, 0);
+	wordexp(d, &p, 0);
 	w = p.we_wordv;
 	assert(p.we_wordc == 1);
 	inform(V(CONFIG), "Configuration file: %s", w[0]);

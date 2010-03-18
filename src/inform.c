@@ -82,11 +82,11 @@ void inform_real(const unsigned int v, const char *func, const char *file,
 
 	com_check_fd();
 
-	if (wmd.state == STATE_UNINIT || P(verbosity).u & v) {
-		if (P(verbosity).u & V(FILELINE))
+	if (wmd.state == STATE_UNINIT || P_verbosity() & v) {
+		if (P_verbosity() & V(FILELINE))
 			fprintf(i_output, "0x%X:%s:%u: ", v, file, line);
 
-		if (P(verbosity).u & V(FUNCTION))
+		if (P_verbosity() & V(FUNCTION))
 			fprintf(i_output, "%s(): ", func);
 
 		va_start(ap, fmt);

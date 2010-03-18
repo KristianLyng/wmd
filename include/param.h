@@ -26,9 +26,13 @@
  */
 #define	WMD_MAX_STRING 1024
 
+/*
+ * Generated enumerations and macros.
+ */
 #include "param-list.h"
 
-/* Container for data types available for params, passed to various
+/*
+ * Container for data types available for params, passed to various
  * helper-functions.
  */
 union param_data {
@@ -63,6 +67,11 @@ enum param_origin {
 	P_STATE_NUM
 };
 
+/*
+ * Fetches the value of a param. Usually accessed through P_param() to
+ * avoid dealing with the union and asserting that the param is handled
+ * as expected.
+ */
 union param_data param_get(enum param_id p);
 
 /* Set the value of the param p to that of d. Origin is used to determine
@@ -80,17 +89,23 @@ union param_data param_get(enum param_id p);
  */
 int param_set(enum param_id p, union param_data d, enum param_origin origin);
 
-/* Set the default value of a parameter. If p is -1, all parameters are
- * reset to defaults.
+/*
+ * Set the default value of a parameter. If p is PARAM_ALL, all parameters
+ * are reset to defaults.
  */
 int param_set_default(enum param_id p, enum param_origin origin);
 
+/*
+ * Parse the string as an option, looking for a key=value pair. Origin is
+ * where this option came from (ie: command line, config file, argument,
+ * "other")
+ */
 int param_parse(char *str, enum param_origin origin);
-/* Show parameters on fd, possibly all of them.
- * If p is -1, all parameters are described.
+
+/*
+ * Show parameters on fd, possibly all of them.
+ * If p is PARAM_ALL, all parameters are described.
  */
 void param_show(FILE * fd, enum param_id p, unsigned int what);
-
-#define P(i) param_get(P_ ## i)
 
 #endif				// _PARAM_H

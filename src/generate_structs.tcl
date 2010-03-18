@@ -77,6 +77,9 @@ set params {
 		""
 		"Does nothing in a file, but can be overridden by -p"
 	}}
+	{demo		string	"Demostring" {
+		"Has some random value"
+	}}
 }
 
 # Levels of verbosity.
@@ -131,7 +134,7 @@ puts $head ""
 set n 0
 puts $head "enum param_id {"
 foreach param $params {
-	puts -nonewline $head "\tP_[string tolower [lindex $param 0]]"
+	puts -nonewline $head "\tPARAM_[string tolower [lindex $param 0]]"
 	if {$n == 0} {
 		puts -nonewline $head " = 0"
 	}
@@ -139,9 +142,9 @@ foreach param $params {
 	puts $head ","
 }
 
-puts $head "\tP_NUM,"
+puts $head "\tPARAM_NUM,"
 # P_ALL is used to signal to a function to iterate all parameters
-puts $head "\tP_ALL"
+puts $head "\tPARAM_ALL"
 puts $head "};"
 puts $head ""
 
@@ -207,7 +210,7 @@ puts $c "
 
 puts $c "
 #define PD(name,type,def,field,min,max, ...) 	\\
-	\[P_ ## name\] =				\\
+	\[PARAM_ ## name\] =				\\
 	{ #name, PTYPE_ ## type, 0,		\\
 	{ .v = NULL },				\\
 	{ .field = def }, min, max , 		\\
@@ -235,7 +238,7 @@ puts $c "
  * FIXME: the field-name shouldn't be necessary.
  */
 "
-puts $c "static struct param param\[P_NUM\] = {"
+puts $c "static struct param param\[PARAM_NUM\] = {"
 
 set n 0
 foreach param $params {
@@ -306,6 +309,8 @@ foreach param $params {
 		puts -nonewline $c "\t\"${com}\""
 	}
 	puts -nonewline $c ")"
+	puts $head "#define P_${name}() param_get(PARAM_${name}).${bf}"
+#define P(i) param_get(PARAM_ ## i)
 }
 puts $c "};"
 puts $c "#undef PD"
