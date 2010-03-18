@@ -77,9 +77,6 @@ set params {
 		""
 		"Does nothing in a file, but can be overridden by -p"
 	}}
-	{demo		string	"Demostring" {
-		"Has some random value"
-	}}
 }
 
 # Levels of verbosity.
@@ -353,7 +350,7 @@ puts $verh "
  *
  * VER_ALL == all verbosities. Not used for bitmasks, just matching.
  */
-typedef enum _t_verbosity_enum {"
+enum verbosity_level {"
 
 set n 0
 foreach ver $verbosities {
@@ -365,4 +362,4 @@ foreach ver $verbosities {
 	incr n
 }
 
-puts $verh "\tVER_NUM,\n\tVER_ALL\n} t_verbosity_enum;"
+puts $verh "\tVER_NUM,\n\tVER_ALL\n};"

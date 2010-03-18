@@ -44,14 +44,15 @@ union param_data {
 	int b;
 };
 
-typedef enum _p_what_enum {
+enum p_what {
 	P_WHAT_BOILER1 = 0,	// name, type, min/max
 	P_WHAT_BOILER2,		// value, default, source
 	P_WHAT_DESCRIPTION,
 	P_WHAT_KEYVALUE,	// name=value (outside comment)
 	P_WHAT_STATE_DEFAULTS,	// Params not changed from the default.
-	P_WHAT_NUM
-} p_what_enum_t;
+	P_WHAT_NUM,
+	P_WHAT_ALL
+};
 #define P_WHAT_BIT(s) (1<<P_WHAT_ ## s)
 
 /*

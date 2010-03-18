@@ -64,6 +64,5 @@ int main(int argc, char **argv)
 	x_init();
 	ret = x_start();
 	inform(V(CORE), "Finished execution. x_start() returned %d", ret);
-	inform(V(CORE), "Demo-value: %s", P_demo());
 	return ret;
 }

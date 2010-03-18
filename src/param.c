@@ -588,17 +588,20 @@ int param_set_default(enum param_id p, enum param_origin origin)
  *
  * XXX: This macro usage is ugly. Factor out when possible.
  */
-#define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s))
+#define WB(s) ((P_WHAT_BIT(s) & what) == P_WHAT_BIT(s) || what == P_WHAT_BIT(ALL))
 void param_show(FILE * fd, enum param_id p, unsigned int what)
 {
 	if (p == PARAM_ALL) {
 		for (p = 0; p < PARAM_NUM; p++) {
 			param_show(fd, p, what);
-			fprintf(fd, "\n");
+			if (what != (P_WHAT_BIT(KEYVALUE) |
+				P_WHAT_BIT(STATE_DEFAULTS)))
+				fprintf(fd, "\n");
 		}
 		return;
 	}
 	param_is_in_range(p);
+	assert(what <= P_WHAT_BIT(ALL));
 	if (!WB(STATE_DEFAULTS)) {
 		if (param[p].origin == P_STATE_DEFAULT)
 			return;

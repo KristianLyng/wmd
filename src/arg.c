@@ -126,7 +126,7 @@ static void argv_help(char *arg)
 "# If the same value is supplied multiple times, the last one is used\n"
 "#\n\n");
 /* *INDENT-ON* */
-		param_show(stdout, PARAM_ALL, UINT_MAX);
+		param_show(stdout, PARAM_ALL, P_WHAT_BIT(ALL));
 	} else if (!strcmp(arg, "paramlist")) {
 		param_show(stdout, PARAM_ALL,
 			   P_WHAT_BIT(KEYVALUE) | P_WHAT_BIT(STATE_DEFAULTS));
