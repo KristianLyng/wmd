@@ -23,7 +23,7 @@
 #include "WIP.h"
 #include "x.h"
 
-core wmd;
+struct core wmd;
 
 /*
  * Only run this once, or mountain trolls may carry you off to the

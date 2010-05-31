@@ -20,7 +20,7 @@
 #include "inform.h"
 #include "core.h"
 
-extern core wmd;
+extern struct core wmd;
 
 /*
  * Checks if an old WM is present and tries to replace it if it is.

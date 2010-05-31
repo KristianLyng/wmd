@@ -77,19 +77,19 @@
  */
 
 /* X-only state */
-typedef struct _x {
+struct x {
 	xcb_connection_t *connection;
 	int default_screen;
-} x;
+};
 
 /* The core structure. Max length: 10ish entries.  */
-typedef struct _core {
+struct core {
 	unsigned int state;
-	x x;
-} core;
+	struct x x;
+};
 
 int config_init(void);
 int argv_init(int argc, char **argv);
-extern core wmd;
+extern struct core wmd;
 
 #endif				// _CORE_H
