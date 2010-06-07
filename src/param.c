@@ -89,8 +89,8 @@ static int param_verify_data(enum param_id p, const union param_data d)
 		return 1;
 	} else {
 		inform(V(CONFIG),
-		       "Parameter-verification failed for "
-		       "%s of type %s", param[p].name, ptype[t].name);
+		       "Parameter-verification failed for %s of type %s",
+		        param[p].name, ptype[t].name);
 		return 0;
 	}
 }
@@ -460,7 +460,7 @@ int param_set(enum param_id p, union param_data d, enum param_origin origin)
 	}
 	if (STATE_IS(CONFIGURED))
 		inform(V(CONFIG_CHANGES),
-		       "Setting value of parameter " "\"%s\"", param[p].name);
+		       "Setting value of parameter \"%s\"", param[p].name);
 	ret = ptype[param[p].type].set(p, d);
 	if (ret)
 		assert(param_verify(p));
@@ -486,7 +486,7 @@ int param_parse(char *str, enum param_origin origin)
 {
 	char *sep = NULL;
 	// FIXME: Hardcoded max-length.
-	char key[1024];
+	char key[BUFSIZ];
 	int p = -1;
 	int length = 0;
 	int value_length = 0;
@@ -503,12 +503,12 @@ int param_parse(char *str, enum param_origin origin)
 	sep = index(str, '=');
 	if (sep == NULL) {
 		inform(V(CONFIG),
-		       "Missing '=' in parameter " "key-value pair: %s", str);
+		       "Missing '=' in parameter key-value pair: %s", str);
 		return 0;
 	}
 	length = sep - str;
 	assert(length >= 0);
-	if (length >= 1024) {
+	if (length >= BUFSIZ) {
 		inform(V(CONFIG), "Parameter-name absurdly long?");
 		return 0;
 	}

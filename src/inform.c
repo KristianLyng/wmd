@@ -111,32 +111,34 @@ static void inform_verify_verbosity(int p)
 	assert(verbosity[p].name);
 }
 
-/* Sets up fd as the new place to send information.
+/* Sets up fd as the new place to send information. Returns true if the
+ * switch was successful, or the new and old fd is the same.
  *
  * XXX: A bit extensive due to inform(), but since we need to be
  * 	very explicit if inform() is likely to fail, this is
  * 	important.
  *
  * XXX: What to do with the old one?
+ *
  */
-static void inform_set_fd(FILE * fd)
+static int inform_set_fd(FILE * fd)
 {
 	int ret;
 
 	if (i_output == fd)
-		return;
+		return 1;
 
 	if (fd == NULL) {
 		inform(V(CORE),
 		       "Attempted to switch to a NULL-pointer "
 		       "for information messages. Ignoring it.");
-		return;
+		return 0;
 	}
 
 	ret = fileno(fd);
 	if (ret == -1) {
 		inform(V(CORE), "Refusing to switch logging to a bad fd");
-		return;
+		return 0;
 	}
 	ret = ferror(fd);
 	if (ret) {
@@ -155,6 +157,25 @@ static void inform_set_fd(FILE * fd)
 			inform(V(CORE),
 			       "Switched to new file descriptor for logging.");
 	}
+	return 1;
+}
+
+/*
+ * Basic sanity checks of the verbosities available to us.
+ */
+static void inform_assert_verbosities(void)
+{
+	int i;
+	for (i = 0; i < VER_NUM; i++) {
+		inform_verify_verbosity(i);
+		if (strlen(verbosity[i].desc) < 10) {
+			inform(V(CORE),
+			       "Description of verbosity level %s "
+			       "(%d, 0x%X) is alarmingly short "
+			       "someone should punch the author!",
+			       verbosity[i].name, i, verbosity[i].bit);
+		}
+	}
 }
 
 /* Set up whatever is needed to inform the user and verify that verbosity
@@ -165,19 +186,11 @@ static void inform_set_fd(FILE * fd)
  */
 void inform_init(FILE * fd)
 {
-	int i;
+	int ret;
+	ret = inform_set_fd(fd);
+	assert(ret);
+	inform_assert_verbosities();
 
-	inform_set_fd(fd);
-
-	for (i = 0; i < VER_NUM; i++) {
-		inform_verify_verbosity(i);
-		if (strlen(verbosity[i].desc) < 10) {
-			inform(V(CORE),
-			       "Description of verbosity level %s "
-			       "(%d, 0x%X) is alarmingly short",
-			       verbosity[i].name, i, verbosity[i].bit);
-		}
-	}
 }
 
 void inform_describe_verbosity(FILE * fd, const int p)
